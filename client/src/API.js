@@ -7,9 +7,10 @@ const SERVER_URL = 'http://localhost:3001/api/';
  * Utility function for parsing the HTTP response.
  * The server always answers with JSON; errors have the shape { error: <message> }.
  */
-function getJson(httpResponsePromise) {
+function getJson(httpResponsePromise) {  
   return new Promise((resolve, reject) => {
-    httpResponsePromise
+    // when fetch() receives an HTTP response, this function is called. 
+    httpResponsePromise  
       .then((response) => {
         if (response.ok) {
           response.json()
@@ -42,7 +43,7 @@ const getEquipment = () => getJson(
 
 // All facilities with their current availability (requires authentication).
 const getFacilities = () => getJson(
-  fetch(SERVER_URL + 'facilities', { credentials: 'include' })
+  fetch(SERVER_URL + 'facilities', { credentials: 'include' })   // "credentials: 'include'" is needed to send the cookie containing the session token
 );
 
 // Reservations of the currently logged-in user.
@@ -59,8 +60,8 @@ const createReservation = (booking) => getJson(
   fetch(SERVER_URL + 'reservations', {
     method: 'POST',
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(booking),
+    headers: { 'Content-Type': 'application/json' },  // "Content-Type" is needed to send a JSON body
+    body: JSON.stringify(booking),  // the body of a POST request is a JSON string
   })
 );
 
@@ -122,4 +123,4 @@ const API = {
   getFacilities, getReservations, createReservation, updateReservation, deleteReservation,
   logIn, totpVerify, getUserInfo, logOut
 };
-export default API;
+export default API;  // Needed for the import in other modules

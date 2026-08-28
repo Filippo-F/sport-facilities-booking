@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router';
 import API from '../API.js';
 
 /**
- * Login form (first authentication screen), controlled component.
+ * Login form (first authentication screen), controlled component (it means we can read and modify 
+ * the values of the input fields through React state).
  */
 function LoginForm(props) {
   const [username, setUsername] = useState('');
@@ -13,7 +14,7 @@ function LoginForm(props) {
   const [waiting, setWaiting] = useState(false);
 
   const handleSubmit = (event) => {
-    event.preventDefault();
+    event.preventDefault();  // prevents the default form submission behavior (which would reload the page)
     setErrorMessage('');
 
     if (!username) {
@@ -41,7 +42,7 @@ function LoginForm(props) {
           {errorMessage ? <Alert dismissible onClose={() => setErrorMessage('')} variant="danger">{errorMessage}</Alert> : null}
           <Form.Group className="mb-3">
             <Form.Label>Email</Form.Label>
-            <Form.Control type="email" value={username} placeholder="Example: u1@p.it"
+            <Form.Control type="email" value={username} placeholder="Example: mario.rossi@gmail.com"
               onChange={(ev) => setUsername(ev.target.value)} />
           </Form.Group>
           <Form.Group className="mb-3">

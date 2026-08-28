@@ -1,4 +1,4 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css';  // Bootstrap CSS is imported here so that it is available in all components.
 import './App.css';
 
 import { useState, useEffect } from 'react';
@@ -10,11 +10,11 @@ import { LoginForm, TotpForm } from './components/Auth.jsx';
 import API from './API.js';
 
 function App() {
-  const navigate = useNavigate();
+  const navigate = useNavigate();  // Used to navigate into different pages
 
   // Authentication state: whether the user is logged in, their info, and
   // whether the second authentication step (TOTP) has been completed.
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);  // "loggedIn" actual value, "setLoggedIn" is the function to change it, "false" is the initial value
   const [user, setUser] = useState(null);
   const [loggedInTotp, setLoggedInTotp] = useState(false);
 
@@ -28,9 +28,9 @@ function App() {
   // Extracts a readable message from an API error and shows it.
   const handleErrors = (err) => {
     let msg = '';
-    if (err.error)
+    if (err.error)   // the server returned an error in the shape { error: <message> }
       msg = err.error;
-    else if (typeof err === 'string')
+    else if (typeof err === 'string')   // the server returned a string error message
       msg = err;
     else
       msg = 'Unknown error';
@@ -39,7 +39,7 @@ function App() {
 
   // Reloads the public availability data (facility types and equipment).
   const loadAvailability = () => {
-    Promise.all([API.getTypes(), API.getEquipment()])
+    Promise.all([API.getTypes(), API.getEquipment()])  // "all" waits for both promises to complete
       .then(([types, equipment]) => {
         setTypes(types);
         setEquipment(equipment);
@@ -49,8 +49,9 @@ function App() {
 
   // At mount time: check whether the user is already logged in (e.g. after a
   // page reload) and load the public availability data.
+  // "useEffect" is a React hook that runs the given function after the component has been rendered (visualized).
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = async () => {   // this function is async because it uses "await" to wait for the API call to complete
       try {
         const user = await API.getUserInfo();
         setLoggedIn(true);
@@ -93,17 +94,21 @@ function App() {
       setLoggedInTotp(false);
       setUser(null);
       setMessage('');
-      navigate('/');
+      navigate('/');  // go back to the home page after logout
     }
   };
 
+  // We return a JSX tree that defines the structure of the app. The <Routes> component defines 
+  // the different pages of the app, and the <Route> components define which component should be rendered
+  // for each path. The "element" prop of each <Route> specifies the component to render, 
+  // and we pass down the necessary props to each component.
   return (
     <Container fluid>
       <Routes>
-        <Route path="/" element={<GenericLayout user={user} loggedIn={loggedIn} loggedInTotp={loggedInTotp}
+        <Route path="/" element={<GenericLayout user={user} loggedIn={loggedIn} loggedInTotp={loggedInTotp}  // "GenericLayout" is the main layout of the app.
           logout={handleLogout} message={message} setMessage={setMessage} />}>
           <Route index element={<HomeLayout types={types} equipment={equipment} loggedIn={loggedIn} />} />
-          <Route path="*" element={<NotFoundLayout />} />
+          <Route path="*" element={<NotFoundLayout />} />  
         </Route>
         <Route path="/login" element={<LoginWithTotp loggedIn={loggedIn} login={handleLogin} user={user}
           loggedInTotp={loggedInTotp} totpSuccessful={totpSuccessful} setLoggedIn={setLoggedIn} />} />
@@ -119,7 +124,7 @@ function App() {
  */
 function LoginWithTotp(props) {
   if (props.loggedIn) {
-    if (props.user.canDoTotp && !props.loggedInTotp) {
+    if (props.user.canDoTotp && !props.loggedInTotp) {  // if the user can do TOTP but has not yet completed the second step, show the TOTP form
       return <TotpForm totpSuccessful={props.totpSuccessful} setLoggedIn={props.setLoggedIn} />;
     } else {
       return <Navigate replace to='/' />;
