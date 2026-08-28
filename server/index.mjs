@@ -13,6 +13,7 @@ import { TOTP } from 'otpauth';
 
 import sportDao from './dao-sport.mjs'; // module for accessing facilities and equipment in the DB
 import userDao from './dao-users.mjs';  // module for accessing the users table in the DB
+import reservationsDao from './dao-reservations.mjs'; // module for accessing reservations in the DB
 
 /*** init express and set-up the middlewares ***/
 const app = express();
@@ -54,7 +55,7 @@ passport.deserializeUser(function (user, callback) {
 import session from 'express-session';
 
 app.use(session({
-  secret: "s0mm3r 2026 - sp0rt c3nt3r s3cr3t",  // secret used to sign the session ID cookie
+  secret: "s3cr3t k3y - sp0rt c3nt3r",  // secret used to sign the session ID cookie
   resave: false,    // does not force the session to be re-saved on every request IF IT WAS NOT MODIFIED
   saveUninitialized: false,  // does not create empty sessions or never used sessions
 }));
@@ -97,8 +98,8 @@ const isLoggedIn = (req, res, next) => {
 }
 
 // Formats "express-validator" errors as strings
-const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
-  return `${location}[${param}]: ${msg}`;
+const errorFormatter = ({ location, msg, path }) => {  // "path" instead of "param" since we are using the most recent version of express-validator (different from the previous ones)
+  return `${location}[${path}]: ${msg}`;
 };
 
 /*** Sport center APIs (public) ***/
@@ -120,6 +121,121 @@ app.get('/api/equipment', (req, res) => {
     .catch(() => res.status(500).json({ error: 'Database error' }));
 });
 
+/*** Reservations APIs (authenticated users) ***/
+
+// GET /api/facilities
+// All facilities with their availability, used for direct facility selection.
+app.get('/api/facilities', isLoggedIn, (req, res) => {    // "isLoggedIn" middleware checks if the user is authenticated, otherwise returns 401
+  reservationsDao.listFacilities()
+    .then(facilities => res.json(facilities))
+    .catch(() => res.status(500).json({ error: 'Database error' }));
+});
+
+// GET /api/reservations
+// Reservations of the current user. The user id comes from the session only to avoid tampering with the request.
+app.get('/api/reservations', isLoggedIn, (req, res) => {
+  reservationsDao.listReservationsByUser(req.user.id)
+    .then(reservations => res.json(reservations))
+    .catch(() => res.status(500).json({ error: 'Database error' }));
+});
+
+// Validation rules for the equipment list, used in both POST and PUT requests.
+const equipmentChecks = [
+  check('equipment').isArray(),   // the equipment field must be an array (e.g. [{id: 1, quantity: 2}, {id: 2, quantity: 1}])
+  check('equipment.*.id').isInt({ min: 1 }),   // "*" checks each element of the array, so each element must have an "id" field that is an integer >= 1
+  check('equipment.*.quantity').isInt({ min: 1 }),   // each element must have a "quantity" field that is an integer >= 1
+  // the same equipment type cannot appear twice in the list
+  check('equipment').custom(equipment => {   // "custom" allows us to define a custom validation function
+    // if the number of unique ids is different from the number of elements, there are duplicates
+    if (Array.isArray(equipment) && new Set(equipment.map(e => e.id)).size !== equipment.length)  
+      throw new Error('Duplicated equipment in the request');
+    return true;
+  }),
+];
+
+// POST /api/reservations
+// Creates a reservation in a single request: either facilityCode (direct
+// selection) or typeId (automatic assignment) must be provided, plus the
+// total requested equipment quantities. All checks happen server-side here.
+app.post('/api/reservations', isLoggedIn,
+  [
+    check('facilityCode').isString().isLength({ min: 1, max: 10 }).optional(),  // "max: 10" for sanity checks to evitate absurdly long strings.
+    check('typeId').isInt({ min: 1 }).optional(),  // "optional()" because we can either provide facilityCode or typeId, but not both
+    ...equipmentChecks,    // spread operator includes all the above validation rules in the "equipmentChecks" array
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ error: errors.array().join(', ') });
+    }
+    // exactly one selection mechanism must be used -> if both are undefined or both are defined, return an error
+    if ((req.body.facilityCode === undefined) === (req.body.typeId === undefined)) { // "===" is used to check if both are undefined or both are defined
+      return res.status(422).json({ error: 'Provide either facilityCode or typeId' });
+    }
+
+    try {
+      const result = await reservationsDao.createReservation(req.user, req.body.facilityCode, req.body.typeId, req.body.equipment);
+      if (result.error)
+        res.status(result.code).json({ error: result.error });
+      else
+        res.status(201).json({ id: result.id, facilityCode: result.facilityCode, typeId: result.typeId, type: result.type, equipment: result.equipment });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ error: 'Database error' });
+    }
+  }
+);
+
+// PUT /api/reservations/:id
+// Replaces the equipment of one of the current user's reservations.
+app.put('/api/reservations/:id', isLoggedIn,
+  [
+    check('id').isInt({ min: 1 }),
+    ...equipmentChecks,
+  ],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ error: errors.array().join(', ') });
+    }
+
+    try {
+      const result = await reservationsDao.updateReservationEquipment(req.user, Number(req.params.id), req.body.equipment); 
+      if (result.error)
+        res.status(result.code).json({ error: result.error });
+      else
+        res.json({ id: result.id, facilityCode: result.facilityCode, typeId: result.typeId, type: result.type, equipment: result.equipment });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ error: 'Database error' });
+    }
+  }
+);
+
+// DELETE /api/reservations/:id
+// Deletes one of the current user's reservations. The score is decreased (by 1) and
+// the deletion time is recorded to enforce the 30-second rule.
+app.delete('/api/reservations/:id', isLoggedIn,
+  [check('id').isInt({ min: 1 })],
+  async (req, res) => {
+    const errors = validationResult(req).formatWith(errorFormatter);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ error: errors.array().join(', ') });
+    }
+
+    try {
+      const result = await reservationsDao.deleteReservation(req.user, Number(req.params.id));
+      if (result.error)
+        res.status(result.code).json({ error: result.error });
+      else
+        res.status(200).json({});
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ error: 'Database error' });
+    }
+  }
+);
+
 /*** Users APIs ***/
 
 function clientUserInfo(req) {
@@ -132,7 +248,7 @@ function clientUserInfo(req) {
 app.post('/api/sessions', function (req, res, next) {
   passport.authenticate('local', (err, user, info) => {   // "local" is the name of the strategy we defined above
     if (err)
-      return next(err);  // "next(err)" will call the error-handling middleware, which will return a 500 error to the client"
+      return next(err);  // "next(err)" will call the error-handling middleware, which will return a 500 error to the client.
     if (!user) {
       return res.status(401).json({ error: info });  
     }

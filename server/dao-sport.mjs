@@ -40,10 +40,12 @@ const listTypes = () => {
 const listEquipment = () => {
   return new Promise((resolve, reject) => {
     // This query is needed to retrieve the equipment types with their stock and the currently available quantity, 
-    // computed as stock minus the sum of quantities in active reservations.
+    // computed as stock minus the sum of quantities in active reservations. Moreover we only consider equipment for which the reservationid
+    // still exists in the reservations table, to avoid counting equipment that was rented in a reservation that has already been deleted.
     const sql = `SELECT et.id, et.name, et.stock,
       et.stock - IFNULL((SELECT SUM(re.quantity) FROM reservationEquipment re
-        WHERE re.equipmentTypeId = et.id), 0) AS available
+        WHERE re.equipmentTypeId = et.id
+          AND re.reservationId IN (SELECT id FROM reservations)), 0) AS available. 
       FROM equipmentTypes et`;
     db.all(sql, [], (err, rows) => {
       if (err)
