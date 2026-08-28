@@ -45,7 +45,7 @@ const listEquipment = () => {
     const sql = `SELECT et.id, et.name, et.stock,
       et.stock - IFNULL((SELECT SUM(re.quantity) FROM reservationEquipment re
         WHERE re.equipmentTypeId = et.id
-          AND re.reservationId IN (SELECT id FROM reservations)), 0) AS available. 
+          AND re.reservationId IN (SELECT id FROM reservations)), 0) AS available
       FROM equipmentTypes et`;
     db.all(sql, [], (err, rows) => {
       if (err)
