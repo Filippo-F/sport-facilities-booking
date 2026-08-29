@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Container } from 'react-bootstrap';
 import { Routes, Route, Navigate, useNavigate } from 'react-router';
 
-import { GenericLayout, HomeLayout, NotFoundLayout } from './components/Layout.jsx';
+import { GenericLayout, HomeLayout, BookingLayout, NotFoundLayout } from './components/Layout.jsx';
 import { LoginForm, TotpForm } from './components/Auth.jsx';
 import API from './API.js';
 
@@ -22,8 +22,8 @@ function App() {
   const [types, setTypes] = useState([]);
   const [equipment, setEquipment] = useState([]);
 
-  // Last error message to be shown to the user.
-  const [message, setMessage] = useState('');
+  // Last error message to be shown to the user: { text, variant } or null.
+  const [message, setMessage] = useState(null);
 
   // Extracts a readable message from an API error and shows it.
   const handleErrors = (err) => {
@@ -34,7 +34,7 @@ function App() {
       msg = err;
     else
       msg = 'Unknown error';
-    setMessage(msg);
+    setMessage({ text: msg, variant: 'danger' });  // "danger" is a Bootstrap class that makes the message red
   };
 
   // Reloads the public availability data (facility types and equipment).
@@ -74,8 +74,19 @@ function App() {
     setLoggedIn(true);
   };
 
+  // Creates a reservation and, on success, refreshes the availability shown
+  // in all the views and shows a confirmation message. Errors are thrown, so
+  // that the booking form can show the reason and let the user retry.
+  const handleCreateReservation = async (booking) => {
+    const created = await API.createReservation(booking);
+    loadAvailability();
+    setMessage({ text: `Reservation confirmed: facility ${created.facilityCode}`, variant: 'success' });
+    return created;
+  };
+
   // Called after a successful TOTP verification: the user info is reloaded
   // since a negative score has been reset by the server.
+  
   const totpSuccessful = () => {
     setLoggedInTotp(true);
     API.getUserInfo()
@@ -93,7 +104,7 @@ function App() {
       setLoggedIn(false);
       setLoggedInTotp(false);
       setUser(null);
-      setMessage('');
+      setMessage(null);
       navigate('/');  // go back to the home page after logout
     }
   };
@@ -108,6 +119,10 @@ function App() {
         <Route path="/" element={<GenericLayout user={user} loggedIn={loggedIn} loggedInTotp={loggedInTotp}  // "GenericLayout" is the main layout of the app.
           logout={handleLogout} message={message} setMessage={setMessage} />}>
           <Route index element={<HomeLayout types={types} equipment={equipment} loggedIn={loggedIn} />} />
+          <Route path="book" element={loggedIn ?
+            <BookingLayout user={user} types={types} equipment={equipment}
+              createReservation={handleCreateReservation} refreshAvailability={loadAvailability} />
+            : <Navigate replace to='/login' />} />
           <Route path="*" element={<NotFoundLayout />} />  
         </Route>
         <Route path="/login" element={<LoginWithTotp loggedIn={loggedIn} login={handleLogin} user={user}

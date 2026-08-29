@@ -3,6 +3,8 @@ import { Outlet, Link } from 'react-router';
 
 import { Navigation } from './Navigation.jsx';
 import { Home } from './Home.jsx';
+import { BookingForm } from './BookingForm.jsx';
+
 
 /**
  * Common layout: navigation bar on top, then an alert with the last error
@@ -20,7 +22,7 @@ function GenericLayout(props) {
       {props.message ?
         <Row>
           <Col>
-            <Alert className='my-1' onClose={() => props.setMessage('')} variant='danger' dismissible>
+            <Alert className='my-1' onClose={() => props.setMessage(null)} variant={props.message.variant} dismissible>
               {props.message}
             </Alert>
           </Col>
@@ -32,6 +34,11 @@ function GenericLayout(props) {
 
 function HomeLayout(props) {
   return <Home types={props.types} equipment={props.equipment} loggedIn={props.loggedIn} />;
+}
+
+function BookingLayout(props) {
+  return <BookingForm user={props.user} types={props.types} equipment={props.equipment}
+    createReservation={props.createReservation} refreshAvailability={props.refreshAvailability} />;
 }
 
 function NotFoundLayout() {
@@ -49,4 +56,4 @@ function NotFoundLayout() {
   );
 }
 
-export { GenericLayout, HomeLayout, NotFoundLayout };
+export { GenericLayout, HomeLayout, BookingLayout, NotFoundLayout };

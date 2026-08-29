@@ -1,2 +1,4 @@
 node_modules
 ck.txt
+.DS_Store
+client/.DS_Store
