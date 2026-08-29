@@ -23,7 +23,7 @@ function GenericLayout(props) {
         <Row>
           <Col>
             <Alert className='my-1' onClose={() => props.setMessage(null)} variant={props.message.variant} dismissible>
-              {props.message}
+              {props.message.text}
             </Alert>
           </Col>
         </Row> : null}
