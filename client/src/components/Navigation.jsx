@@ -10,6 +10,11 @@ function Navigation(props) {
   return (
     <Navbar bg="primary" variant="dark" className="px-3 mb-3">
       <Navbar.Brand as={Link} to="/">Sport Center</Navbar.Brand>
+      {props.loggedIn ?
+        <Nav className="me-auto">
+          <Nav.Link as={Link} to="/book">Book</Nav.Link>
+          <Nav.Link as={Link} to="/reservations">My reservations</Nav.Link>
+        </Nav> : null}
       <Nav className="ms-auto align-items-center">
         {props.loggedIn ?
           <>

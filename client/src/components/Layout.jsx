@@ -4,7 +4,7 @@ import { Outlet, Link } from 'react-router';
 import { Navigation } from './Navigation.jsx';
 import { Home } from './Home.jsx';
 import { BookingForm } from './BookingForm.jsx';
-
+import { Reservations, EditReservation } from './Reservations.jsx';
 
 /**
  * Common layout: navigation bar on top, then an alert with the last error
@@ -41,6 +41,16 @@ function BookingLayout(props) {
     createReservation={props.createReservation} refreshAvailability={props.refreshAvailability} />;
 }
 
+function ReservationsLayout(props) {
+  return <Reservations reservations={props.reservations} deleteReservation={props.deleteReservation} />;
+}
+
+function EditReservationLayout(props) {
+  return <EditReservation user={props.user} types={props.types} equipment={props.equipment}
+    reservations={props.reservations} updateReservation={props.updateReservation}
+    refreshAvailability={props.refreshAvailability} />;
+}
+
 function NotFoundLayout() {
   return (
     <>
@@ -56,4 +66,4 @@ function NotFoundLayout() {
   );
 }
 
-export { GenericLayout, HomeLayout, BookingLayout, NotFoundLayout };
+export { GenericLayout, HomeLayout, BookingLayout, ReservationsLayout, EditReservationLayout, NotFoundLayout };

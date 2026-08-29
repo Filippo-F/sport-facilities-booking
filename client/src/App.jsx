@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Container } from 'react-bootstrap';
 import { Routes, Route, Navigate, useNavigate } from 'react-router';
 
-import { GenericLayout, HomeLayout, BookingLayout, NotFoundLayout } from './components/Layout.jsx';
+import { GenericLayout, HomeLayout, BookingLayout, ReservationsLayout, EditReservationLayout, NotFoundLayout } from './components/Layout.jsx';
 import { LoginForm, TotpForm } from './components/Auth.jsx';
 import API from './API.js';
 
@@ -22,7 +22,10 @@ function App() {
   const [types, setTypes] = useState([]);
   const [equipment, setEquipment] = useState([]);
 
-  // Last error message to be shown to the user: { text, variant } or null.
+  // Reservations of the logged-in user.
+  const [reservations, setReservations] = useState([]);
+
+  // Last message to be shown to the user: { text, variant } or null.
   const [message, setMessage] = useState(null);
 
   // Extracts a readable message from an API error and shows it.
@@ -66,6 +69,22 @@ function App() {
     loadAvailability();
   }, []);
 
+  // Reloads the reservations of the current user.
+  const loadReservations = () => {
+    API.getReservations()
+      .then(reservations => setReservations(reservations))
+      .catch(err => handleErrors(err));
+  };
+
+  // Whenever the user logs in (or is found already logged in), their
+  // reservations are loaded; they are cleared at logout.
+  useEffect(() => {
+    if (loggedIn)
+      loadReservations();
+    else
+      setReservations([]);
+  }, [loggedIn]);
+
   // Login with username and password. On failure the error is thrown, so that
   // the login form can show it.
   const handleLogin = async (credentials) => {
@@ -80,13 +99,44 @@ function App() {
   const handleCreateReservation = async (booking) => {
     const created = await API.createReservation(booking);
     loadAvailability();
+    loadReservations();
     setMessage({ text: `Reservation confirmed: facility ${created.facilityCode}`, variant: 'success' });
     return created;
   };
 
+  // Replaces the equipment of a reservation. On success all the views are
+  // refreshed; errors are thrown so that the edit form can show the reason.
+  const handleUpdateReservation = async (reservationId, equipment) => {
+    const updated = await API.updateReservation(reservationId, equipment);
+    loadAvailability();
+    loadReservations();
+    setMessage({ text: `Reservation for facility ${updated.facilityCode} updated`, variant: 'success' });
+    return updated;
+  };
+
+  // Deletes a reservation. The score changes, so the user info is reloaded
+  // together with the reservations and the availability. If the operation
+  // fails (e.g. the reservation does not exist anymore), the error is shown
+  // and the data is reloaded anyway, to realign the views with the server.
+  const handleDeleteReservation = async (reservationId) => {
+    try {
+      await API.deleteReservation(reservationId);
+      setMessage({ text: 'Reservation deleted', variant: 'success' });
+    } catch (err) {
+      handleErrors(err);
+      throw err;
+    } finally {  // This part is executed in any case, whether the deletion succeeded or failed. 
+    // It is used to refresh the data and keep the views in sync with the server.
+      loadAvailability();
+      loadReservations();
+      API.getUserInfo()
+        .then(user => setUser(user))
+        .catch(() => { });
+    }
+  };
+
   // Called after a successful TOTP verification: the user info is reloaded
   // since a negative score has been reset by the server.
-  
   const totpSuccessful = () => {
     setLoggedInTotp(true);
     API.getUserInfo()
@@ -119,6 +169,13 @@ function App() {
         <Route path="/" element={<GenericLayout user={user} loggedIn={loggedIn} loggedInTotp={loggedInTotp}  // "GenericLayout" is the main layout of the app.
           logout={handleLogout} message={message} setMessage={setMessage} />}>
           <Route index element={<HomeLayout types={types} equipment={equipment} loggedIn={loggedIn} />} />
+          <Route path="reservations" element={loggedIn ?
+            <ReservationsLayout reservations={reservations} deleteReservation={handleDeleteReservation} />
+            : <Navigate replace to='/login' />} />
+          <Route path="reservations/:id/edit" element={loggedIn ?
+            <EditReservationLayout user={user} types={types} equipment={equipment} reservations={reservations}
+              updateReservation={handleUpdateReservation} refreshAvailability={loadAvailability} />
+            : <Navigate replace to='/login' />} />
           <Route path="book" element={loggedIn ?
             <BookingLayout user={user} types={types} equipment={equipment}
               createReservation={handleCreateReservation} refreshAvailability={loadAvailability} />
