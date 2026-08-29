@@ -104,14 +104,18 @@ function App() {
     return created;
   };
 
-  // Replaces the equipment of a reservation. On success all the views are
-  // refreshed; errors are thrown so that the edit form can show the reason.
+  // Replaces the equipment of a reservation. 
+  // The views are refreshed in any case, so that a failure also realigns the application with 
+  // the current state of the server. The error is propagated to the edit form, which shows the reason.
   const handleUpdateReservation = async (reservationId, equipment) => {
-    const updated = await API.updateReservation(reservationId, equipment);
-    loadAvailability();
-    loadReservations();
-    setMessage({ text: `Reservation for facility ${updated.facilityCode} updated`, variant: 'success' });
-    return updated;
+    try {
+      const updated = await API.updateReservation(reservationId, equipment);
+      setMessage({ text: `Reservation for facility ${updated.facilityCode} updated`, variant: 'success' });
+      return updated;
+    } finally {
+      loadAvailability();
+      loadReservations();
+    }
   };
 
   // Deletes a reservation. The score changes, so the user info is reloaded
