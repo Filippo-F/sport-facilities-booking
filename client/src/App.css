@@ -1,0 +1,260 @@
+/* Application styles.
+   This file is imported after Bootstrap in App.jsx, so the rules below can
+   override the Bootstrap defaults. */
+ 
+/* Here we define the colour palette and the font families used in the application.
+*/
+:root {
+  --ground: #f7f9f6;
+  --surface: #ffffff;
+  --surface-2: #eef2ec;
+  --ink: #16211c;
+  --ink-2: #4c5b52;
+  --ink-3: #6f7e75;
+  --line: #e1e7e0;
+  --line-strong: #cbd5cb;
+  --accent: #0e6b3f;
+  --accent-soft: #ddede3;
+  --warn: #7e5209;
+  --warn-soft: #f6ebd6;
+
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+body {
+  background-color: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+/* Headings use the condensed display face, in uppercase: the same treatment
+   used for the availability figures, so the two read as one system. */
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-weight: 600;
+}
+h1, h2 { font-weight: 700; }
+
+/* Facility codes (T1, B2, ...) are identifiers, so they are set in a
+   monospaced face wherever they appear. */
+.code {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/*** Navigation bar ***/
+
+/* Light bar with a single separating rule, instead of the solid dark block. */
+.navbar.app-nav {
+  background-color: var(--surface) !important;
+  border-bottom: 1px solid var(--line);
+}
+.app-nav .navbar-brand {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.app-nav .nav-link { color: var(--ink-2); }
+.app-nav .nav-link:hover { color: var(--ink); }
+.app-nav .nav-link.active {
+  color: var(--ink);
+  background-color: var(--surface-2);
+  border-radius: 5px;
+}
+.app-nav .navbar-text { color: var(--ink-2); }
+
+/* Pitch mark next to the application name, drawn with borders only. */
+.brand-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background-color: var(--accent);
+  position: relative;
+  flex: none;
+}
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 50%;
+  border-top: 2px solid var(--surface);
+}
+
+/*** Page heading ***/
+
+.page-head {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 1.5rem;
+}
+.page-head h1 { font-size: 2.1rem; line-height: 1.05; margin-bottom: 0.35rem; }
+.page-head p { color: var(--ink-2); max-width: 46ch; margin-bottom: 0; }
+
+/* Section labels above a group of cards or rows. */
+.section-label {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink-3);
+  margin-bottom: 0.75rem;
+}
+
+/*** Availability figures ***/
+
+/* The free/total figure is the main piece of information on the page, so it
+   gets the display face and fixed-width digits to keep the columns aligned. */
+.figure-free {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 2rem;
+  line-height: 0.9;
+  color: var(--accent);
+}
+.figure-total {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink-3);
+}
+.figure-none .figure-free { color: var(--ink-3); }
+
+/*** Cards ***/
+
+.card.facility-card {
+  border-color: var(--line);
+  border-radius: 8px;
+}
+.card.facility-card .card-title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: 1.2rem;
+  margin-bottom: 0;
+}
+
+/* Equipment required by a facility type. */
+.kit-tag {
+  display: inline-block;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--ink-2);
+}
+.kit-tag.optional {
+  border-style: dashed;
+  color: var(--ink-3);
+}
+.kit-tag .qty {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/*** Equipment availability rows ***/
+
+.kit-row {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.kit-row .kit-qty {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.kit-row .kit-qty .left { color: var(--accent); }
+.kit-row.scarce .kit-qty .left { color: var(--warn); }
+
+/* Bootstrap progress bar, made thinner and quieter. */
+.kit-row .progress { height: 3px; background-color: var(--surface-2); }
+.kit-row .progress-bar { background-color: var(--accent); }
+.kit-row.scarce .progress-bar { background-color: var(--warn); }
+
+/*** Forms ***/
+
+.form-label {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* The two selection mechanisms are presented as two selectable blocks. */
+.choice {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 0.55rem 0.75rem;
+  margin-bottom: 0.45rem;
+}
+.choice.selected {
+  border-color: var(--accent);
+  background-color: var(--accent-soft);
+}
+
+/*** Buttons ***/
+
+.btn {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+}
+.btn-primary {
+  --bs-btn-bg: var(--accent);
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-hover-bg: #0b5733;
+  --bs-btn-hover-border-color: #0b5733;
+  --bs-btn-active-bg: #0b5733;
+  --bs-btn-active-border-color: #0b5733;
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--accent);
+  --bs-btn-border-color: var(--line-strong);
+  --bs-btn-hover-bg: var(--accent);
+  --bs-btn-hover-border-color: var(--accent);
+}
+
+/* Small buttons inside table rows keep the normal text case: uppercase would
+   be hard to read at that size. */
+.btn-sm { text-transform: none; letter-spacing: 0; font-family: var(--font-body); }
+
+/*** Tables ***/
+
+.table { --bs-table-bg: transparent; }
+.table > thead th {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-3);
+  border-bottom-color: var(--line-strong);
+}
+
+/*** Motion ***/
+
+/* Only a short colour transition on the elements that react to the pointer. */
+.btn, .choice, .card.facility-card { transition: background-color 0.15s, border-color 0.15s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .choice, .card.facility-card { transition: none; }
+}
