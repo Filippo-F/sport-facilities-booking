@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Row, Col, Form, Button, Alert } from 'react-bootstrap';
+import { Row, Col, Form, Button, Alert, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import API from '../API.js';
 
@@ -36,7 +36,7 @@ function BookingForm(props) {
   const selectedTypeId = mode === 'direct' // if mode is 'direct',
     ? facilities.find(f => f.code === facilityCode)?.typeId  // get the type of the selected facility
     : (typeId ? Number(typeId) : undefined);  // otherwise, use the selected type id (undefined if typeId is empty)
-  const selectedType = props.types.find(t => t.id === selectedTypeId);  
+  const selectedType = props.types.find(t => t.id === selectedTypeId);
 
   // when the selected type changes, prefill the quantities with the mandatory
   // minimums (optional equipment starts at zero)
@@ -50,17 +50,25 @@ function BookingForm(props) {
     } else {
       setQuantities({});  // no type selected, clear the quantities
     }
- 
+
   // Reset the quantities only when the selected facility type changes.
   // The minimum quantities are fixed data for that type, but props.types is
-  // recreated after every availability refresh, so including it here in the 
+  // recreated after every availability refresh, so including it here in the
   // dependencies would incorrectly overwrite the values the user has already typed.
   }, [selectedTypeId]);  // <- dependencies
 
   const handleQuantity = (equipmentId, value) => {   // "equipmentId" is id of the equipment, "value" is new quantity entered by the user
-    // functional form: the new state depends on the old one (so if we call setQuantities multiple times in a row, 
+    // functional form: the new state depends on the old one (so if we call setQuantities multiple times in a row,
     // we always get the latest state since React will queue the updates and apply them in order)
     setQuantities(old => ({ ...old, [equipmentId]: value }));
+  };
+
+  // The - and + buttons update the same state used by the input field.
+  // The field remains a controlled component; the buttons are just a faster way to change its value.
+  const step = (rule, delta) => {
+    const next = (Number(quantities[rule.id]) || 0) + delta;
+    if (next >= rule.minQty)   // never below the mandatory minimum (0 for optional equipment)
+      handleQuantity(rule.id, next);
   };
 
   const handleSubmit = (event) => {
@@ -113,22 +121,30 @@ function BookingForm(props) {
   };
 
   return (
-    <Row>
-      <Col md={3}></Col>
-      <Col md={6}>
-        <h2 className="pb-2">Book a facility</h2>
+    <Row className="justify-content-center">
+      <Col md={8} lg={6}>
+        <div className="page-head">
+          <h1>New reservation</h1>
+          <p>Choose the facility, then the equipment quantities. The mandatory minimums are already filled in.</p>
+        </div>
+
         {errorMessage ? <Alert variant='danger' dismissible onClose={() => setErrorMessage('')}>{errorMessage}</Alert> : null}
+
         <Form onSubmit={handleSubmit}>
-          <Form.Group className="mb-3">
-            <Form.Label>Facility selection</Form.Label>
-            <Form.Check type="radio" id="mode-direct" label="Choose a specific facility"
-              checked={mode === 'direct'} onChange={() => { setMode('direct'); setTypeId(''); }} />
-            <Form.Check type="radio" id="mode-automatic" label="Automatic assignment (choose only the type)"
-              checked={mode === 'automatic'} onChange={() => { setMode('automatic'); setFacilityCode(''); }} />
+          <Form.Group className="mb-4">
+            <Form.Label>How to choose the facility</Form.Label>
+            <div className={mode === 'direct' ? 'choice selected' : 'choice'}>
+              <Form.Check type="radio" id="mode-direct" label="I choose the facility myself"
+                checked={mode === 'direct'} onChange={() => { setMode('direct'); setTypeId(''); }} />
+            </div>
+            <div className={mode === 'automatic' ? 'choice selected' : 'choice'}>
+              <Form.Check type="radio" id="mode-automatic" label="Automatic assignment, I only choose the type"
+                checked={mode === 'automatic'} onChange={() => { setMode('automatic'); setFacilityCode(''); }} />
+            </div>
           </Form.Group>
 
           {mode === 'direct' ?
-            <Form.Group className="mb-3">
+            <Form.Group className="mb-4">
               <Form.Label>Facility</Form.Label>
               <Form.Select value={facilityCode} onChange={ev => setFacilityCode(ev.target.value)}>
                 <option value="">Select a facility...</option>
@@ -139,7 +155,7 @@ function BookingForm(props) {
               </Form.Select>
             </Form.Group>
             :
-            <Form.Group className="mb-3">
+            <Form.Group className="mb-4">
               <Form.Label>Facility type</Form.Label>
               <Form.Select value={typeId} onChange={ev => setTypeId(ev.target.value)}>
                 <option value="">Select a type...</option>
@@ -152,7 +168,7 @@ function BookingForm(props) {
 
           {selectedType ?
             <>
-              <h5>Equipment for rental</h5>
+              <div className="section-label">Equipment</div>
               {negativeScore ?
                 <Alert variant="warning">
                   Your score is negative: only the mandatory minimum equipment can be requested.
@@ -160,24 +176,37 @@ function BookingForm(props) {
                 </Alert> : null}
               {selectedType.equipment.map(rule => {
                 const available = props.equipment.find(e => e.id === rule.id)?.available;
+                const value = Number(quantities[rule.id]) || 0;
                 return (
-                  <Form.Group className="mb-2" key={rule.id}>
-                    <Form.Label>
-                      {rule.name} {rule.minQty > 0 ? `(minimum ${rule.minQty})` : '(optional)'} — available: {available}
-                    </Form.Label>
-                    <Form.Control type="number" min={rule.minQty} value={quantities[rule.id] ?? ''}
-                      disabled={negativeScore || waiting}
-                      onChange={ev => handleQuantity(rule.id, ev.target.value)} />
+                  <Form.Group className="qty-row" key={rule.id}>
+                    <div>
+                      <div>{rule.name}</div>
+                      <small>
+                        {rule.minQty > 0 ? `minimum ${rule.minQty}` : 'optional'} &middot; {available} available
+                      </small>
+                    </div>
+                    <InputGroup className="qty-group">
+                      <Button variant="outline-secondary" type="button"
+                        disabled={negativeScore || waiting || value <= rule.minQty}
+                        onClick={() => step(rule, -1)}>&minus;</Button>
+                      <Form.Control type="number" min={rule.minQty} value={quantities[rule.id] ?? ''}
+                        disabled={negativeScore || waiting}
+                        onChange={ev => handleQuantity(rule.id, ev.target.value)} />
+                      <Button variant="outline-secondary" type="button"
+                        disabled={negativeScore || waiting}
+                        onClick={() => step(rule, 1)}>+</Button>
+                    </InputGroup>
                   </Form.Group>
                 );
               })}
             </> : null}
 
-          <Button className="mt-3 me-2" type="submit" disabled={waiting || !selectedType}>Book</Button>
-          <Button className="mt-3" variant="secondary" disabled={waiting} onClick={() => navigate('/')}>Cancel</Button>
+          <div className="d-flex gap-2 mt-4">
+            <Button type="submit" disabled={waiting || !selectedType}>Confirm reservation</Button>
+            <Button variant="outline-secondary" disabled={waiting} onClick={() => navigate('/')}>Cancel</Button>
+          </div>
         </Form>
       </Col>
-      <Col md={3}></Col>
     </Row>
   );
 }

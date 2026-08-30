@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Form, Button, Alert, Col, Row } from 'react-bootstrap';
+import { Form, Button, Alert, Card, Col, Row } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import API from '../API.js';
 
@@ -34,9 +34,14 @@ function LoginForm(props) {
   };
 
   return (
-    <Row>
-      <Col xs={4}></Col>
-      <Col xs={4}>
+    <Row className="justify-content-center auth-screen">
+      <Col sm={9} md={6} lg={4}>
+        <div className="auth-brand">
+          <span className="brand-mark" />
+          Sport Center
+        </div>
+        <Card className="auth-card">
+          <Card.Body>
         <h1 className="pb-3">Login</h1>
         <Form onSubmit={handleSubmit}>
           {errorMessage ? <Alert dismissible onClose={() => setErrorMessage('')} variant="danger">{errorMessage}</Alert> : null}
@@ -50,10 +55,11 @@ function LoginForm(props) {
             <Form.Control type="password" value={password} placeholder="Enter your password"
               onChange={(ev) => setPassword(ev.target.value)} />
           </Form.Group>
-          <Button className="mt-3" type="submit" disabled={waiting}>Login</Button>
+          <Button className="mt-3 w-100" type="submit" disabled={waiting}>Login</Button>
         </Form>
+          </Card.Body>
+        </Card>
       </Col>
-      <Col xs={4}></Col>
     </Row>
   );
 }
@@ -95,10 +101,15 @@ function TotpForm(props) {
   };
 
   return (
-    <Row>
-      <Col xs={4}></Col>
-      <Col xs={4}>
-        <h2 className="pt-3">Second Factor Authentication</h2>
+    <Row className="justify-content-center auth-screen">
+      <Col sm={9} md={6} lg={4}>
+        <div className="auth-brand">
+          <span className="brand-mark" />
+          Sport Center
+        </div>
+        <Card className="auth-card">
+          <Card.Body>
+        <h2>Second Factor Authentication</h2>
         <h5>Please enter the code that you read on your device</h5>
         <p>Completing this step will also restore a negative score to zero. You can skip it to continue with password-only authentication.</p>
         <Form onSubmit={handleSubmit}>
@@ -107,11 +118,13 @@ function TotpForm(props) {
             <Form.Label>Code</Form.Label>
             <Form.Control type='text' value={totpCode} onChange={ev => setTotpCode(ev.target.value)} />
           </Form.Group>
-          <Button className='my-2' type='submit' disabled={waiting}>Validate</Button>
-          <Button className='my-2 mx-2' variant='secondary' disabled={waiting} onClick={() => navigate('/')}>Skip</Button>
+          <Button className='my-2 w-100' type='submit' disabled={waiting}>Validate</Button>
+          <Button className='mb-2 w-100' variant='outline-secondary' disabled={waiting}
+            onClick={() => navigate('/')}>Skip this step</Button>
         </Form>
+          </Card.Body>
+        </Card>
       </Col>
-      <Col xs={4}></Col>
     </Row>
   );
 }

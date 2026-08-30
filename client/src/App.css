@@ -258,3 +258,56 @@ h1, h2 { font-weight: 700; }
 @media (prefers-reduced-motion: reduce) {
   .btn, .choice, .card.facility-card { transition: none; }
 }
+
+/*** Login and second factor screens ***/
+
+/* These two pages are outside the common layout, so they have no navigation
+   bar: the application name is repeated here and the form is centred. */
+.auth-screen { min-height: 80vh; align-items: center; }
+.auth-brand {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.auth-card {
+  border-color: var(--line);
+  border-radius: 10px;
+}
+.auth-card .card-body { padding: 1.75rem; }
+.auth-card h1, .auth-card h2 { font-size: 1.6rem; }
+
+/*** Equipment quantity rows in the booking form ***/
+
+.qty-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.qty-row small { color: var(--ink-3); }
+.qty-group { width: 9.5rem; flex: none; }
+.qty-group .form-control {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+/* the browser spin buttons are redundant next to the - and + buttons. 
+  So we hide the native buttons of the browser, but we kep the custom + and - buttons.
+*/
+.qty-group input[type="number"] { -moz-appearance: textfield; }   
+.qty-group input[type="number"]::-webkit-outer-spin-button,
+.qty-group input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
