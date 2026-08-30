@@ -50,7 +50,12 @@ function BookingForm(props) {
     } else {
       setQuantities({});  // no type selected, clear the quantities
     }
-  }, [selectedTypeId, props.types]);
+ 
+  // Reset the quantities only when the selected facility type changes.
+  // The minimum quantities are fixed data for that type, but props.types is
+  // recreated after every availability refresh, so including it here in the 
+  // dependencies would incorrectly overwrite the values the user has already typed.
+  }, [selectedTypeId]);  // <- dependencies
 
   const handleQuantity = (equipmentId, value) => {   // "equipmentId" is id of the equipment, "value" is new quantity entered by the user
     // functional form: the new state depends on the old one (so if we call setQuantities multiple times in a row, 
