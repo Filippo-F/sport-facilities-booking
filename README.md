@@ -2,9 +2,12 @@
 
 ## React Client Application Routes
 
-- Route `/`: page content and purpose
-- Route `/something/:param`: page content and purpose, param specification
-- ...
+- Route `/`: first page, public. Shows the number of available facilities for each type and the currently available quantity of each equipment type.
+- Route `/login`: login form; after the username/password step it shows the TOTP form on a separate screen, which can be skipped.
+- Route `/book`: creation of a new reservation, choosing the facility directly or by type (automatic assignment) plus the equipment quantities. Requires authentication.
+- Route `/reservations`: list of the reservations of the logged-in user, with the buttons to edit the equipment or delete a reservation. Requires authentication.
+- Route `/reservations/:id/edit`: form to change the equipment quantities of the reservation with the given id. Requires authentication.
+- Route `*`: page shown for any non-existing route.
 
 ## API Server
 
@@ -66,15 +69,24 @@ Error responses always have the shape `{ "error": "<message>" }`. Validation err
 
 ## Database Tables
 
-- Table `users` - contains xx yy zz
-- Table `something` - contains ww qq ss
-- ...
+- Table `users` - registered users and their credentials: `id`, `email`, `name`, `hash`, `salt`, `secret` (TOTP), `lastTotpStep`, `score`.
+- Table `facilityTypes` - the categories of facility offered by the sport center: `id`, `name`.
+- Table `facilities` - the physical facilities, one row each, identified by a short code: `code`, `typeId`.
+- Table `equipmentTypes` - the equipment available for rental with the total amount owned by the center: `id`, `name`, `stock`.
+- Table `typeEquipment` - which equipment is allowed for each facility type and its minimum quantity (0 = optional): `facilityTypeId`, `equipmentTypeId`, `minQty`.
+- Table `reservations` - the active reservations, one row per booked facility: `id`, `userId`, `facilityCode` (unique, so a facility cannot be booked twice).
+- Table `reservationEquipment` - the equipment rented within each reservation: `reservationId`, `equipmentTypeId`, `quantity`.
+- Table `releases` - the last time a user deleted a reservation of a given facility type, to enforce the 30-second rule: `userId`, `facilityTypeId`, `releasedAt`.
 
 ## Main React Components
 
-- `ListOfSomething` (in `List.js`): component purpose and main functionality
-- `GreatButton` (in `GreatButton.js`): component purpose and main functionality
-- ...
+- `App` (in `App.jsx`): main container, holds the application state (authentication, availability, reservations, last message) and defines the routes; all the operations reload the data from the server.
+- `Home` (in `Home.jsx`): public first page, shows the availability of facility types and equipment in two tables.
+- `BookingForm` (in `BookingForm.jsx`): creation of a reservation with the two selection mechanisms, prefills the mandatory minimum quantities and blocks them for users with a negative score.
+- `Reservations` (in `Reservations.jsx`): table of the reservations of the user, with inline confirmation before a deletion.
+- `EditReservation` (in `Reservations.jsx`): form to add or remove equipment of an existing reservation, never below the mandatory minimums.
+- `LoginForm` and `TotpForm` (in `Auth.jsx`): the two authentication screens, the second one optional.
+- `Navigation` (in `Navigation.jsx`): navigation bar with the current user, the score and the login/logout buttons.
 
 (only _main_ components, minor ones may be skipped)
 
@@ -84,6 +96,12 @@ Error responses always have the shape `{ "error": "<message>" }`. Validation err
 
 ## Users Credentials
 
-- username, password (plus any other requested info which depends on the text)
-- username, password (plus any other requested info which depends on the text)
+The TOTP secret is the same for all the users: `LXBSMDTMSP2I5XFXIYRGFVWSFI`.
+
+| username | password | name | reservations | initial score |
+|---|---|---|---|---|
+| `u1@p.it` | `pwd` | John | none | 0 |
+| `u2@p.it` | `pwd` | Alice | 1 (basketball court B1) | -1 |
+| `u3@p.it` | `pwd` | George | 1 (tennis court T1) | 0 |
+| `u4@p.it` | `pwd` | Laura | 2 (cycling track C1, table tennis table TT1) | -1 |
 
