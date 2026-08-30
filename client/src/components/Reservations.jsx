@@ -59,16 +59,16 @@ function Reservations(props) {
                       {confirmingId === r.id ?
                         <>
                           <Button variant="danger" size="sm" className="me-2" disabled={waiting}
-                            onClick={() => handleDelete(r.id)}>Confirm delete</Button>
+                            onClick={() => handleDelete(r.id)}><i className="bi bi-trash me-1" />Confirm delete</Button>
                           <Button variant="secondary" size="sm" disabled={waiting}
                             onClick={() => setConfirmingId(null)}>Cancel</Button>
                         </>
                         :
                         <>
                           <Button variant="outline-primary" size="sm" className="me-2" disabled={waiting}
-                            onClick={() => navigate(`/reservations/${r.id}/edit`)}>Edit equipment</Button>
+                            onClick={() => navigate(`/reservations/${r.id}/edit`)}><i className="bi bi-pencil me-1" />Edit equipment</Button>
                           <Button variant="outline-danger" size="sm" disabled={waiting}
-                            onClick={() => setConfirmingId(r.id)}>Delete</Button>
+                            onClick={() => setConfirmingId(r.id)}><i className="bi bi-trash me-1" />Delete</Button>
                         </>}
                     </td>
                   </tr>)}

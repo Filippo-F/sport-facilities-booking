@@ -1,4 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.min.css';  // Bootstrap CSS is imported here so that it is available in all components.
+import 'bootstrap-icons/font/bootstrap-icons.css';  // icon font used on the action buttons
 import './App.css';
 
 import { useState, useEffect } from 'react';

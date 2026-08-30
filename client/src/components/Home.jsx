@@ -21,7 +21,9 @@ function Home(props) {
           <p>Every reservation comes with the equipment the facility requires.
             The numbers below are the availability right now.</p>
           {props.loggedIn ?
-            <Button className="mt-3" onClick={() => navigate('/book')}>Book a facility</Button>
+            <Button className="mt-3" onClick={() => navigate('/book')}>
+              <i className="bi bi-plus-lg me-1" />Book a facility
+            </Button>
             : <p className="mt-3 mb-0"><i>Log in to book a facility.</i></p>}
         </Col>
         <Col md={5} className="d-flex gap-4 justify-content-md-end align-items-start mt-4 mt-md-0">
