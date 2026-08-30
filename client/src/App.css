@@ -1,7 +1,7 @@
 /* Application styles.
    This file is imported after Bootstrap in App.jsx, so the rules below can
    override the Bootstrap defaults. */
- 
+
 /* Here we define the colour palette and the font families used in the application.
 */
 :root {
@@ -17,6 +17,8 @@
   --accent-soft: #ddede3;
   --warn: #7e5209;
   --warn-soft: #f6ebd6;
+  --danger: #9a3524;
+  --danger-soft: #f6e2dd;
 
   --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
@@ -131,7 +133,24 @@ h1, h2 { font-weight: 700; }
   font-size: 1rem;
   color: var(--ink-3);
 }
-.figure-none .figure-free { color: var(--ink-3); }
+.facility-card.low .figure-free { color: var(--warn); }
+.facility-card.full .figure-free { color: var(--danger); }
+
+/* A card says something about its state only when there is something worth
+   saying: nothing is written on the types that are simply available. */
+.card-status {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  font-weight: 600;
+  align-self: flex-start;
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+}
+.facility-card.low .card-status { color: var(--warn); background-color: var(--warn-soft); }
+.facility-card.full .card-status { color: var(--danger); background-color: var(--danger-soft); }
+.facility-card.full { background-color: var(--surface-2); }
 
 /*** Cards ***/
 
@@ -180,12 +199,14 @@ h1, h2 { font-weight: 700; }
   color: var(--ink-2);
 }
 .kit-row .kit-qty .left { color: var(--accent); }
-.kit-row.scarce .kit-qty .left { color: var(--warn); }
+.kit-row.low .kit-qty .left { color: var(--warn); }
+.kit-row.empty .kit-qty .left { color: var(--danger); }
 
 /* Bootstrap progress bar, made thinner and quieter. */
 .kit-row .progress { height: 3px; background-color: var(--surface-2); }
 .kit-row .progress-bar { background-color: var(--accent); }
-.kit-row.scarce .progress-bar { background-color: var(--warn); }
+.kit-row.low .progress-bar { background-color: var(--warn); }
+.kit-row.empty .progress { background-color: var(--danger-soft); }
 
 /*** Forms ***/
 
@@ -276,7 +297,9 @@ h1, h2 { font-weight: 700; }
   justify-content: center;
   gap: 0.5rem;
   margin-bottom: 1rem;
+  text-decoration: none;
 }
+.auth-brand:hover { color: var(--accent); }
 .auth-card {
   border-color: var(--line);
   border-radius: 10px;
@@ -305,7 +328,7 @@ h1, h2 { font-weight: 700; }
 /* the browser spin buttons are redundant next to the - and + buttons. 
   So we hide the native buttons of the browser, but we kep the custom + and - buttons.
 */
-.qty-group input[type="number"] { -moz-appearance: textfield; }   
+.qty-group input[type="number"] { -moz-appearance: textfield; }
 .qty-group input[type="number"]::-webkit-outer-spin-button,
 .qty-group input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;

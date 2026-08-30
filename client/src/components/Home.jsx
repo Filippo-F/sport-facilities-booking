@@ -44,42 +44,54 @@ function Home(props) {
 
       <div className="section-label">Facilities</div>
       <Row xs={1} md={2} lg={3} className="g-3 mb-4">
-        {props.types.map(t =>
-          <Col key={t.id}>
-            <Card className={t.available === 0 ? 'facility-card figure-none h-100' : 'facility-card h-100'}>
-              <Card.Body className="d-flex flex-column gap-2">
-                <div className="d-flex justify-content-between align-items-start gap-2">
-                  <Card.Title>{t.name}</Card.Title>
-                  <div className="text-end">
-                    <span className="figure-free">{t.available}</span>
-                    <span className="figure-total">/{t.total}</span>
+        {props.types.map(t => {
+          // No available facilities at all, or a single facility left when the type has
+          // more than one: the two cases are shown with different colours
+          const full = t.available === 0;
+          const low = !full && t.available === 1 && t.total > 1;
+          return (
+            <Col key={t.id}>
+              <Card className={'facility-card h-100' + (full ? ' full' : low ? ' low' : '')}>
+                <Card.Body className="d-flex flex-column gap-2">
+                  <div className="d-flex justify-content-between align-items-start gap-2">
+                    <Card.Title>{t.name}</Card.Title>
+                    <div className="text-end">
+                      <span className="figure-free">{t.available}</span>
+                      <span className="figure-total">/{t.total}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="d-flex flex-wrap gap-1">
-                  {t.equipment.map(e =>
-                    <span key={e.id} className={e.minQty > 0 ? 'kit-tag' : 'kit-tag optional'}>
-                      {e.name}{e.minQty > 0 ? <span className="qty"> &times;{e.minQty}</span> : null}
-                    </span>)}
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>)}
+                  <div className="d-flex flex-wrap gap-1">
+                    {t.equipment.map(e =>
+                      <span key={e.id} className={e.minQty > 0 ? 'kit-tag' : 'kit-tag optional'}>
+                        {e.name}{e.minQty > 0 ? <span className="qty"> &times;{e.minQty}</span> : null}
+                      </span>)}
+                  </div>
+                  {full ? <div className="card-status">Fully booked</div>
+                    : low ? <div className="card-status">Last one free</div> : null}
+                </Card.Body>
+              </Card>
+            </Col>);
+        })}
       </Row>
 
       <div className="section-label">Equipment for rental</div>
       <Row xs={1} md={2} lg={3} className="gx-5">
-        {props.equipment.map(e =>
+        {props.equipment.map(e => {
+          // the threshold is a proportion of the stock, not a fixed number: an
+          // item that exists in a single copy and is free is not running out
+          const empty = e.available === 0;
+          const low = !empty && (e.available === 1 && e.stock > 1 || e.available <= e.stock / 3);
+          return (
           <Col key={e.id}>
-            {/* an item with one unit left is marked, so that it stands out
-                before the user tries to rent more than what is available */}
-            <div className={e.available <= 1 ? 'kit-row scarce' : 'kit-row'}>
+            <div className={'kit-row' + (empty ? ' empty' : low ? ' low' : '')}>
               <div className="d-flex justify-content-between align-items-baseline gap-2">
                 <span>{e.name}</span>
                 <span className="kit-qty"><span className="left">{e.available}</span>/{e.stock}</span>
               </div>
               <ProgressBar now={e.available} max={e.stock} className="mt-1" />
             </div>
-          </Col>)}
+          </Col>);
+        })}
       </Row>
 
       </>}

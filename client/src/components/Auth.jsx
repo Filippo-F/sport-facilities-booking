@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Form, Button, Alert, Card, Col, Row } from 'react-bootstrap';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router';
 import API from '../API.js';
 
 /**
@@ -36,10 +36,10 @@ function LoginForm(props) {
   return (
     <Row className="justify-content-center auth-screen">
       <Col sm={9} md={6} lg={4}>
-        <div className="auth-brand">
+        <Link to="/" className="auth-brand">
           <span className="brand-mark" />
           Sport Center
-        </div>
+        </Link>
         <Card className="auth-card">
           <Card.Body>
         <h1 className="pb-3">Login</h1>
@@ -59,6 +59,9 @@ function LoginForm(props) {
         </Form>
           </Card.Body>
         </Card>
+        <p className="text-center mt-3 mb-0">
+          <Link to="/">Back to the availability page</Link>
+        </p>
       </Col>
     </Row>
   );
@@ -103,10 +106,10 @@ function TotpForm(props) {
   return (
     <Row className="justify-content-center auth-screen">
       <Col sm={9} md={6} lg={4}>
-        <div className="auth-brand">
+        <Link to="/" className="auth-brand">
           <span className="brand-mark" />
           Sport Center
-        </div>
+        </Link>
         <Card className="auth-card">
           <Card.Body>
         <h2>Second Factor Authentication</h2>
