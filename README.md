@@ -105,3 +105,7 @@ The TOTP secret is the same for all the users: `LXBSMDTMSP2I5XFXIYRGFVWSFI`.
 | `u3@p.it` | `pwd` | George | 1 (tennis court T1) | 0 |
 | `u4@p.it` | `pwd` | Laura | 2 (cycling track C1, table tennis table TT1) | -1 |
 
+
+## Note
+
+- `server/package.json` includes an `allowScripts` entry for `sqlite3`: npm 12 blocks the install scripts of dependencies by default, and `sqlite3` needs its own to obtain the compiled native binary. Without it `npm ci` succeeds but the server cannot open the database.

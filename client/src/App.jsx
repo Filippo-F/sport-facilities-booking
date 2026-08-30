@@ -61,13 +61,13 @@ function App() {
         setUser(user);
         if (user.isTotp)
           setLoggedInTotp(true);
-      } catch (err) {
+      } catch {
         // the user is simply not authenticated: nothing to do
       }
     };
     checkAuth();
     loadAvailability();
-  }, []);
+  }, []);  // empty dependency list: this must run once, when the component is mounted
 
   // Reloads the reservations of the current user.
   const loadReservations = () => {
@@ -83,6 +83,8 @@ function App() {
       loadReservations();
     else
       setReservations([]);
+  // only loggedIn is a dependency: the effect must react to the login state, not to
+  // the identity of loadReservations, which is recreated at every render
   }, [loggedIn]);
 
   // Login with username and password. On failure the error is thrown, so that
@@ -151,7 +153,7 @@ function App() {
   const handleLogout = async () => {
     try {
       await API.logOut();
-    } catch (err) {
+    } catch {
       // nothing more can be done if the logout fails
     } finally {
       // clean up all the user-related state
