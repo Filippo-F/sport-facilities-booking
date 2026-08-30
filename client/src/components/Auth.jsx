@@ -118,11 +118,11 @@ function TotpForm(props) {
 
 function LoginButton() {
   const navigate = useNavigate();
-  return <Button variant="outline-light" onClick={() => navigate('/login')}>Login</Button>;
+  return <Button variant="outline-secondary" onClick={() => navigate('/login')}>Login</Button>;
 }
 
 function LogoutButton(props) {
-  return <Button variant="outline-light" onClick={props.logout}>Logout</Button>;
+  return <Button variant="outline-secondary" onClick={props.logout}>Logout</Button>;
 }
 
 export { LoginForm, TotpForm, LoginButton, LogoutButton };

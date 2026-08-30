@@ -8,8 +8,11 @@ import { LoginButton, LogoutButton } from './Auth.jsx';
  */
 function Navigation(props) {
   return (
-    <Navbar bg="primary" variant="dark" className="px-3 mb-3">
-      <Navbar.Brand as={Link} to="/">Sport Center</Navbar.Brand>
+    <Navbar className="app-nav px-3 mb-4">
+      <Navbar.Brand as={Link} to="/">
+        <span className="brand-mark" />
+        Sport Center
+      </Navbar.Brand>
       {props.loggedIn ?
         <Nav className="me-auto">
           <Nav.Link as={Link} to="/book">Book</Nav.Link>
@@ -18,9 +21,9 @@ function Navigation(props) {
       <Nav className="ms-auto align-items-center">
         {props.loggedIn ?
           <>
-            <Navbar.Text className="me-2">
-              {props.user.name} — score: <Badge bg={props.user.score < 0 ? 'danger' : 'light'}
-                text={props.user.score < 0 ? undefined : 'dark'}>{props.user.score}</Badge>
+            <Navbar.Text className="me-3">
+              {props.user.name} — score: <Badge bg={props.user.score < 0 ? 'warning' : 'secondary'}
+                text={props.user.score < 0 ? 'dark' : undefined}>{props.user.score}</Badge>
               {props.loggedInTotp ? <Badge bg="success" className="ms-2">2FA</Badge> : null}
             </Navbar.Text>
             <LogoutButton logout={props.logout} />
