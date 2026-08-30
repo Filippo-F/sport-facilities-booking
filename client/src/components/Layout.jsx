@@ -33,7 +33,8 @@ function GenericLayout(props) {
 }
 
 function HomeLayout(props) {
-  return <Home types={props.types} equipment={props.equipment} loggedIn={props.loggedIn} />;
+  return <Home types={props.types} equipment={props.equipment} loggedIn={props.loggedIn}
+    loading={props.loading} />;
 }
 
 function BookingLayout(props) {
@@ -42,7 +43,8 @@ function BookingLayout(props) {
 }
 
 function ReservationsLayout(props) {
-  return <Reservations reservations={props.reservations} deleteReservation={props.deleteReservation} />;
+  return <Reservations reservations={props.reservations} deleteReservation={props.deleteReservation}
+    loading={props.loading} />;
 }
 
 function EditReservationLayout(props) {

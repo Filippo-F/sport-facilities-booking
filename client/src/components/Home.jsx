@@ -1,4 +1,4 @@
-import { Row, Col, Card, Button, ProgressBar } from 'react-bootstrap';
+import { Row, Col, Card, Button, ProgressBar, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 
 /**
@@ -25,16 +25,22 @@ function Home(props) {
             : <p className="mt-3 mb-0"><i>Log in to book a facility.</i></p>}
         </Col>
         <Col md={5} className="d-flex gap-4 justify-content-md-end align-items-start mt-4 mt-md-0">
-          <div className="d-flex flex-column">
-            <span className="figure-free">{freeFacilities}</span>
-            <span className="section-label mb-0">free now</span>
-          </div>
-          <div className="d-flex flex-column">
-            <span className="figure-free">{totalFacilities}</span>
-            <span className="section-label mb-0">facilities</span>
-          </div>
+          {/* the totals are hidden while loading: showing 0 would be not right */}
+          {props.loading ? null :
+            <>
+              <div className="d-flex flex-column">
+                <span className="figure-free">{freeFacilities}</span>
+                <span className="section-label mb-0">free now</span>
+              </div>
+              <div className="d-flex flex-column">
+                <span className="figure-free">{totalFacilities}</span>
+                <span className="section-label mb-0">facilities</span>
+              </div>
+            </>}
         </Col>
       </Row>
+
+      {props.loading ? <Spinner /> : <>
 
       <div className="section-label">Facilities</div>
       <Row xs={1} md={2} lg={3} className="g-3 mb-4">
@@ -75,6 +81,8 @@ function Home(props) {
             </div>
           </Col>)}
       </Row>
+
+      </>}
     </>
   );
 }

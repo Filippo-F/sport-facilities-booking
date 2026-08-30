@@ -25,6 +25,11 @@ function App() {
   // Reservations of the logged-in user.
   const [reservations, setReservations] = useState([]);
 
+  // True while the corresponding data is being fetched, so that the pages can
+  // show a spinner instead of rendering an empty (and therefore wrong) list.
+  const [loadingAvailability, setLoadingAvailability] = useState(true);
+  const [loadingReservations, setLoadingReservations] = useState(true);
+
   // Last message to be shown to the user: { text, variant } or null.
   const [message, setMessage] = useState(null);
 
@@ -42,12 +47,16 @@ function App() {
 
   // Reloads the public availability data (facility types and equipment).
   const loadAvailability = () => {
+    setLoadingAvailability(true);
     Promise.all([API.getTypes(), API.getEquipment()])  // "all" waits for both promises to complete
       .then(([types, equipment]) => {
         setTypes(types);
         setEquipment(equipment);
       })
-      .catch(err => handleErrors(err));
+      .catch(err => handleErrors(err))
+      // "finally" runs on success and on failure as well: on error the page must
+      // show the error message, not stay on the spinner forever
+      .finally(() => setLoadingAvailability(false));
   };
 
   // At mount time: check whether the user is already logged in (e.g. after a
@@ -71,9 +80,11 @@ function App() {
 
   // Reloads the reservations of the current user.
   const loadReservations = () => {
+    setLoadingReservations(true);
     API.getReservations()
       .then(reservations => setReservations(reservations))
-      .catch(err => handleErrors(err));
+      .catch(err => handleErrors(err))
+      .finally(() => setLoadingReservations(false));
   };
 
   // Whenever the user logs in (or is found already logged in), their
@@ -81,8 +92,10 @@ function App() {
   useEffect(() => {
     if (loggedIn)
       loadReservations();
-    else
+    else {
       setReservations([]);
+      setLoadingReservations(false);
+    }
   // only loggedIn is a dependency: the effect must react to the login state, not to
   // the identity of loadReservations, which is recreated at every render
   }, [loggedIn]);
@@ -174,9 +187,11 @@ function App() {
       <Routes>
         <Route path="/" element={<GenericLayout user={user} loggedIn={loggedIn} loggedInTotp={loggedInTotp}  // "GenericLayout" is the main layout of the app.
           logout={handleLogout} message={message} setMessage={setMessage} />}>
-          <Route index element={<HomeLayout types={types} equipment={equipment} loggedIn={loggedIn} />} />
+          <Route index element={<HomeLayout types={types} equipment={equipment} loggedIn={loggedIn}
+            loading={loadingAvailability} />} />
           <Route path="reservations" element={loggedIn ?
-            <ReservationsLayout reservations={reservations} deleteReservation={handleDeleteReservation} />
+            <ReservationsLayout reservations={reservations} deleteReservation={handleDeleteReservation}
+              loading={loadingReservations} />
             : <Navigate replace to='/login' />} />
           <Route path="reservations/:id/edit" element={loggedIn ?
             <EditReservationLayout user={user} types={types} equipment={equipment} reservations={reservations}

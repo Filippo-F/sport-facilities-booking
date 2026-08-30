@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Row, Col, Table, Button, Alert, Form } from 'react-bootstrap';
+import { Row, Col, Table, Button, Alert, Form, Spinner } from 'react-bootstrap';
 import { useNavigate, useParams, Link } from 'react-router';
 
 /**
@@ -27,23 +27,35 @@ function Reservations(props) {
   return (
     <Row>
       <Col>
-        <h2 className="pb-2">My reservations</h2>
-        {props.reservations.length === 0 ?
-          <p>You have no reservations. <Link to="/book">Book a facility</Link>.</p>
-          :
-          <>
-            <p>Note: deleting a reservation reduces your score by 1.</p>
-            <Table striped>
+        <div className="page-head">
+          <h1>My reservations</h1>
+          <p>Deleting a reservation frees the facility and its equipment, and reduces your score by one.</p>
+        </div>
+
+        {/* while the list is being loaded the empty message won't be shown:
+            a user with reservations would read that they have none */}
+        {props.loading ? <Spinner /> :
+          props.reservations.length === 0 ?
+            <p>You have no reservations. <Link to="/book">Book a facility</Link>.</p>
+            :
+            <Table className="align-middle">
               <thead>
                 <tr><th>Facility</th><th>Type</th><th>Equipment</th><th></th></tr>
               </thead>
               <tbody>
                 {props.reservations.map(r =>
                   <tr key={r.id}>
-                    <td>{r.facilityCode}</td>
+                    <td><span className="code">{r.facilityCode}</span></td>
                     <td>{r.type}</td>
-                    <td>{r.equipment.map(e => `${e.quantity}× ${e.name}`).join(', ')}</td>
                     <td>
+                      <div className="d-flex flex-wrap gap-1">
+                        {r.equipment.map(e =>
+                          <span key={e.id} className="kit-tag">
+                            {e.name}<span className="qty"> &times;{e.quantity}</span>
+                          </span>)}
+                      </div>
+                    </td>
+                    <td className="text-end">
                       {confirmingId === r.id ?
                         <>
                           <Button variant="danger" size="sm" className="me-2" disabled={waiting}
@@ -61,8 +73,7 @@ function Reservations(props) {
                     </td>
                   </tr>)}
               </tbody>
-            </Table>
-          </>}
+            </Table>}
       </Col>
     </Row>
   );
@@ -97,7 +108,7 @@ function EditReservation(props) {
       setQuantities(initial);
     }
     // the reservation content only changes through this same page, so the
-    // dependency on its id is enough 
+    // dependency on its id is enough
   }, [reservation?.id]);
 
   if (!reservation || !type) {
@@ -159,7 +170,10 @@ function EditReservation(props) {
     <Row>
       <Col md={3}></Col>
       <Col md={6}>
-        <h2 className="pb-2">Edit equipment — {reservation.facilityCode} ({reservation.type})</h2>
+        <div className="page-head">
+          <h1>Edit equipment</h1>
+          <p><span className="code">{reservation.facilityCode}</span> — {reservation.type}</p>
+        </div>
         {errorMessage ? <Alert variant='danger' dismissible onClose={() => setErrorMessage('')}>{errorMessage}</Alert> : null}
         {negativeScore ?
           <Alert variant="warning">
@@ -170,7 +184,7 @@ function EditReservation(props) {
           {type.equipment.map(rule => {
             const available = props.equipment.find(e => e.id === rule.id)?.available;
             return (
-              <Form.Group className="mb-2" key={rule.id}>
+              <Form.Group className="mb-3" key={rule.id}>
                 <Form.Label>
                   {rule.name} {rule.minQty > 0 ? `(minimum ${rule.minQty})` : '(optional)'} — currently {currentQty(rule.id)}, other {available} available
                 </Form.Label>
