@@ -80,8 +80,8 @@ Error responses always have the shape `{ "error": "<message>" }`. Validation err
 
 ## Main React Components
 
-- `App` (in `App.jsx`): main container, holds the application state (authentication, availability, reservations, last message) and defines the routes; all the operations reload the data from the server.
-- `Home` (in `Home.jsx`): public first page, shows the availability of facility types and equipment in two tables.
+- `App` (in `App.jsx`): main container, holds the application state (authentication, availability, reservations, loading flags, last message) and defines the routes; all the operations reload the data from the server.
+- `Home` (in `Home.jsx`): public first page, shows one card per facility type with its availability and required equipment, and the available quantity of every equipment type.
 - `BookingForm` (in `BookingForm.jsx`): creation of a reservation with the two selection mechanisms, prefills the mandatory minimum quantities and blocks them for users with a negative score.
 - `Reservations` (in `Reservations.jsx`): table of the reservations of the user, with inline confirmation before a deletion.
 - `EditReservation` (in `Reservations.jsx`): form to add or remove equipment of an existing reservation, never below the mandatory minimums.
