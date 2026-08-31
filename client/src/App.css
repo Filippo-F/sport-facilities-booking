@@ -328,7 +328,7 @@ h1, h2 { font-weight: 700; }
 /* the browser spin buttons are redundant next to the - and + buttons. 
   So we hide the native buttons of the browser, but we kep the custom + and - buttons.
 */
-.qty-group input[type="number"] { -moz-appearance: textfield; }
+.qty-group input[type="number"] { appearance: textfield; -moz-appearance: textfield; }
 .qty-group input[type="number"]::-webkit-outer-spin-button,
 .qty-group input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
