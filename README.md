@@ -86,6 +86,7 @@ Error responses always have the shape `{ "error": "<message>" }`. Validation err
 - `Reservations` (in `Reservations.jsx`): table of the reservations of the user, with inline confirmation before a deletion.
 - `EditReservation` (in `Reservations.jsx`): form to add or remove equipment of an existing reservation, never below the mandatory minimums.
 - `LoginForm` and `TotpForm` (in `Auth.jsx`): the two authentication screens, the second one optional.
+- `TotpForm` (in `Auth.jsx`): second authentication screen, verifies the TOTP code and can be skipped.
 - `Navigation` (in `Navigation.jsx`): navigation bar with the current user, the score and the login/logout buttons.
 
 (only _main_ components, minor ones may be skipped)
