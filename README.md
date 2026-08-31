@@ -89,8 +89,6 @@ Error responses always have the shape `{ "error": "<message>" }`. Validation err
 - `TotpForm` (in `Auth.jsx`): second authentication screen, verifies the TOTP code and can be skipped.
 - `Navigation` (in `Navigation.jsx`): navigation bar with the current user, the score and the login/logout buttons.
 
-(only _main_ components, minor ones may be skipped)
-
 ## Screenshot
 
 ![Screenshot](./img/screenshot.png)
