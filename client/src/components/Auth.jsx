@@ -8,8 +8,9 @@ import API from '../API.js';
  * the values of the input fields through React state).
  */
 function LoginForm(props) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  // prefilled with one of the seeded users, to make testing faster
+  const [username, setUsername] = useState('u1@p.it');
+  const [password, setPassword] = useState('pwd');
   const [errorMessage, setErrorMessage] = useState('');
   const [waiting, setWaiting] = useState(false);
 
