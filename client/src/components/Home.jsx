@@ -10,7 +10,7 @@ function Home(props) {
 
   // Totals shown in the heading. They are derived from the data received from
   // the server, so they are computed while rendering and never stored.
-  const freeFacilities = props.types.reduce((sum, t) => sum + t.available, 0);
+  const freeFacilities = props.types.reduce((sum, t) => sum + t.available, 0);  // "reduce" used to sum the available facilities across all types
   const totalFacilities = props.types.reduce((sum, t) => sum + t.total, 0);
 
   return (

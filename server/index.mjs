@@ -148,6 +148,7 @@ const equipmentChecks = [
   check('equipment').custom(equipment => {   // "custom" allows us to define a custom validation function
     // if the number of unique ids is different from the number of elements, there are duplicates
     if (Array.isArray(equipment) && new Set(equipment.map(e => e.id)).size !== equipment.length)  
+      // "Set" is a structure containing only unique values, so if the size of the set is different from the length of the array, there are duplicates
       throw new Error('Duplicated equipment in the request');
     return true;
   }),
@@ -166,7 +167,7 @@ app.post('/api/reservations', isLoggedIn,
   async (req, res) => {
     const errors = validationResult(req).formatWith(errorFormatter);
     if (!errors.isEmpty()) {
-      return res.status(422).json({ error: errors.array().join(', ') });
+      return res.status(422).json({ error: errors.array().join(', ') }); 
     }
     // exactly one selection mechanism must be used -> if both are undefined or both are defined, return an error
     if ((req.body.facilityCode === undefined) === (req.body.typeId === undefined)) { // "===" is used to check if both are undefined or both are defined
@@ -191,7 +192,7 @@ app.post('/api/reservations', isLoggedIn,
 app.put('/api/reservations/:id', isLoggedIn,
   [
     check('id').isInt({ min: 1 }),
-    ...equipmentChecks,
+    ...equipmentChecks,  
   ],
   async (req, res) => {
     const errors = validationResult(req).formatWith(errorFormatter);
@@ -200,6 +201,7 @@ app.put('/api/reservations/:id', isLoggedIn,
     }
 
     try {
+      // "req.params.id" is a string, so we convert it to a number with "Number()".
       const result = await reservationsDao.updateReservationEquipment(req.user, Number(req.params.id), req.body.equipment); 
       if (result.error)
         res.status(result.code).json({ error: result.error });
