@@ -322,6 +322,16 @@ app.delete('/api/sessions/current', (req, res) => {
   });
 });
 
+// Final error handler: reached through next(err) or by errors thrown by the middlewares
+// (e.g. a malformed JSON body). Without it Express answers with an HTML page containing
+// the stack trace, which exposes internal details. The client always gets the usual { error } shape.
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.parse.failed')
+    return res.status(400).json({ error: 'Malformed JSON body' });
+  console.error(err);   // the details stay in the server log
+  res.status(500).json({ error: 'Internal server error' });
+});
+
 // Activating the server
 const PORT = 3001;
 app.listen(PORT, (err) => {
