@@ -33,7 +33,7 @@ Error responses always have the shape `{ "error": "<message>" }`. Validation err
 - POST `/api/login-totp`
   - Second authentication step: verifies a 6-digit TOTP code for the logged-in user. On success the session is marked as fully 2FA-authenticated and a negative score is reset to zero. Codes already used (same or older TOTP step) are rejected.
   - Request: `{ "code": "123456" }`
-  - Response: `{ "otp": "authorized", "score": 0 }` — 401 on invalid or reused code.
+  - Response: `{ "otp": "authorized", "score": 0 }` — 401 on invalid or reused code, 429 after 5 attempts in 5 minutes (the attempt is counted before the code is checked, so parallel requests are limited too).
 
 - GET `/api/sessions/current`
   - Returns the current session user, 401 if no active session.
@@ -76,6 +76,7 @@ Error responses always have the shape `{ "error": "<message>" }`. Validation err
 - Table `typeEquipment` - which equipment is allowed for each facility type and its minimum quantity (0 = optional): `facilityTypeId`, `equipmentTypeId`, `minQty`.
 - Table `reservations` - the active reservations, one row per booked facility: `id`, `userId`, `facilityCode` (unique, so a facility cannot be booked twice).
 - Table `reservationEquipment` - the equipment rented within each reservation: `reservationId`, `equipmentTypeId`, `quantity`.
+- Table `totpAttempts` - TOTP attempts of each user in the current 5-minute window, to limit brute force on the second factor: `userId`, `attempts`, `windowStart`.
 - Table `releases` - the last time a user deleted a reservation of a given facility type, to enforce the 30-second rule: `userId`, `facilityTypeId`, `releasedAt`.
 
 ## Main React Components

@@ -77,10 +77,42 @@ const resetScore = (userId) => {
   });
 };
 
+// Records a new TOTP attempt of the user and returns how many attempts they made in the current window.
+// A single statement does read, check and write, so parallel requests cannot all read the same
+// counter: each one gets its own increasing number. If the window is older than windowMs it restarts at 1.
+const registerTotpAttempt = (userId, windowMs) => {
+  return new Promise((resolve, reject) => {
+    const now = Date.now();
+    const sql = `INSERT INTO totpAttempts (userId, attempts, windowStart) VALUES (?, 1, ?)
+      ON CONFLICT(userId) DO UPDATE SET
+        attempts = CASE WHEN windowStart <= ? THEN 1 ELSE attempts + 1 END,
+        windowStart = CASE WHEN windowStart <= ? THEN excluded.windowStart ELSE windowStart END
+      RETURNING attempts`;
+    db.get(sql, [userId, now, now - windowMs, now - windowMs], (err, row) => {
+      if (err)
+        return reject(err);
+      resolve(row.attempts);
+    });
+  });
+};
+
+// Forgets the attempts of the user, after a successful TOTP verification.
+const clearTotpAttempts = (userId) => {
+  return new Promise((resolve, reject) => {
+    db.run('DELETE FROM totpAttempts WHERE userId = ?', [userId], function (err) {
+      if (err)
+        return reject(err);
+      resolve(this.changes);
+    });
+  });
+};
+
 // Export the functions as an object, so they can be imported and used in other modules.
 export default {
   getUserById,
   getUser,
   updateLastTotpStep,
-  resetScore
+  resetScore,
+  registerTotpAttempt,
+  clearTotpAttempts
 };

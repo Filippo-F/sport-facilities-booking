@@ -94,6 +94,11 @@ app.use(passport.authenticate('session'));
  * A code is accepted only if it is valid within the allowed window and its
  * time step is more recent than the last accepted one for this user.
  */
+// Brute-force limit on the TOTP step: at most 5 attempts every 5 minutes per user.
+// With 3 valid codes out of 10^6 at any time, guessing one would take on average ~230 days.
+const TOTP_MAX_ATTEMPTS = 5;
+const TOTP_LOCK_MS = 5 * 60 * 1000;
+
 function verifyTotpToken(user, token) {
   const totp = new TOTP({
     algorithm: 'SHA1',
@@ -307,6 +312,15 @@ app.post('/api/login-totp', isLoggedIn,
       // same status and message as a wrong code, so the answer does not reveal whether TOTP is enabled
       return res.status(401).json({ error: 'Cannot authenticate with TOTP' });
     }
+    // brute-force protection: the attempt is counted BEFORE checking the code, so that also
+    // many parallel requests are limited (each one gets its own number from the DB)
+    try {
+      const attempts = await userDao.registerTotpAttempt(req.user.id, TOTP_LOCK_MS);
+      if (attempts > TOTP_MAX_ATTEMPTS)
+        return res.status(429).json({ error: 'Too many attempts, please try again in a few minutes' });
+    } catch {
+      return res.status(500).json({ error: 'Database error' });
+    }
     const success = verifyTotpToken(req.user, req.body.code);
     if (success) {
       try {
@@ -317,6 +331,7 @@ app.post('/api/login-totp', isLoggedIn,
           return res.status(401).json({ error: 'Cannot authenticate with TOTP' });
         // a negative score is restored to zero by a 2FA login
         await userDao.resetScore(req.user.id);
+        await userDao.clearTotpAttempts(req.user.id);
       } catch {
         return res.status(500).json({ error: 'Database error' });
       }

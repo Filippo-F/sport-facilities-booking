@@ -86,9 +86,10 @@ function TotpForm(props) {
         props.totpSuccessful();
         navigate('/');
       })
-      .catch(() => {
-        // a generic message is shown, without revealing details
-        setErrorMessage('Wrong code, please try again');
+      .catch((err) => {
+        // the server messages for this step are already generic (wrong code, too many attempts),
+        // so they can be shown as they are
+        setErrorMessage(err.error);
         setWaiting(false);
       });
   };

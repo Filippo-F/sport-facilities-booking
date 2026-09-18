@@ -88,6 +88,18 @@ CREATE TABLE IF NOT EXISTS "releases" (
 	FOREIGN KEY("facilityTypeId") REFERENCES "facilityTypes"("id")
 );
 
+-- TOTP attempts of each user in the current time window, to limit brute force on the second factor.
+-- A 6-digit code has 10^6 values: without a limit an attacker who knows the password could simply
+-- try them all. One row per user: the window restarts once it is older than the lockout period,
+-- and the row is deleted after a successful verification.
+CREATE TABLE IF NOT EXISTS "totpAttempts" (
+	"userId"	INTEGER NOT NULL,
+	"attempts"	INTEGER NOT NULL,
+	"windowStart"	INTEGER NOT NULL,
+	PRIMARY KEY("userId"),
+	FOREIGN KEY("userId") REFERENCES "users"("id")
+);
+
 -- Facility types
 INSERT INTO "facilityTypes" ("id","name") VALUES (1,'tennis court');
 INSERT INTO "facilityTypes" ("id","name") VALUES (2,'basketball court');
