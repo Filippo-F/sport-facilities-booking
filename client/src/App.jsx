@@ -3,7 +3,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';  // icon font used on the act
 import './App.css';
 
 import { useState, useEffect } from 'react';
-import { Container } from 'react-bootstrap';
+import { Container, Spinner } from 'react-bootstrap';
 import { Routes, Route, Navigate, useNavigate } from 'react-router';
 
 import { GenericLayout, HomeLayout, BookingLayout, ReservationsLayout, EditReservationLayout, NotFoundLayout } from './components/Layout.jsx';
@@ -18,6 +18,9 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(false);  // "loggedIn" actual value, "setLoggedIn" is the function to change it, "false" is the initial value
   const [user, setUser] = useState(null);
   const [loggedInTotp, setLoggedInTotp] = useState(false);
+  // False until the server has told us whether a session already exists. Without it, after a
+  // page reload the protected routes would see loggedIn = false for a moment and redirect to /login.
+  const [authChecked, setAuthChecked] = useState(false);
 
   // Availability data shown on the first page (public).
   const [types, setTypes] = useState([]);
@@ -73,6 +76,8 @@ function App() {
           setLoggedInTotp(true);
       } catch {
         // the user is simply not authenticated: nothing to do
+      } finally {
+        setAuthChecked(true);
       }
     };
     checkAuth();
@@ -183,6 +188,10 @@ function App() {
   // the different pages of the app, and the <Route> components define which component should be rendered
   // for each path. The "element" prop of each <Route> specifies the component to render, 
   // and we pass down the necessary props to each component.
+  // until the session check is done, the routes cannot decide between the page and the redirect
+  if (!authChecked)
+    return <Container fluid className="text-center mt-5"><Spinner /></Container>;
+
   return (
     <Container fluid>
       <Routes>
