@@ -45,9 +45,10 @@ passport.use(new LocalStrategy(async function verify(username, password, callbac
   return callback(null, user);   // "null" means no error, "user" means authentication succeeded.
 }));
 
-// After a successful authentication, the whole user object given by the strategy is serialized in the session.
+// After a successful authentication only the user id is stored in the session: the rest
+// (including the TOTP secret) is reloaded from the DB at every request, so it never sits in the session store.
 passport.serializeUser(function (user, callback) {
-  callback(null, user);
+  callback(null, { id: user.id });
 });
 
 // At every request the user is reloaded from the DB, so that req.user always
@@ -80,6 +81,12 @@ app.use(session({
   secret: sessionSecret,  // secret used to sign the session ID cookie
   resave: false,    // does not force the session to be re-saved on every request IF IT WAS NOT MODIFIED
   saveUninitialized: false,  // does not create empty sessions or never used sessions
+  cookie: {
+    httpOnly: true,     // not readable from JavaScript, so an XSS cannot steal it (already the default, made explicit)
+    sameSite: 'lax',    // not sent on cross-site requests such as a POST from another website (CSRF protection)
+    secure: process.env.NODE_ENV === 'production',  // HTTPS only in production; local development runs on plain HTTP
+    maxAge: 2 * 60 * 60 * 1000,  // the session expires after 2 hours
+  },
 }));
 app.use(passport.authenticate('session'));
 
