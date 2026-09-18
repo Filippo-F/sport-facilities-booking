@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "Server for the Sport exam project",
+  "description": "REST API server for the sport facilities booking app",
   "main": "index.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

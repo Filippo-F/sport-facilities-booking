@@ -8,9 +8,8 @@ import API from '../API.js';
  * the values of the input fields through React state).
  */
 function LoginForm(props) {
-  // prefilled with one of the seeded users, to make testing faster
-  const [username, setUsername] = useState('u1@p.it');
-  const [password, setPassword] = useState('pwd');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [waiting, setWaiting] = useState(false);
 
@@ -48,7 +47,7 @@ function LoginForm(props) {
           {errorMessage ? <Alert dismissible onClose={() => setErrorMessage('')} variant="danger">{errorMessage}</Alert> : null}
           <Form.Group className="mb-3">
             <Form.Label>Email</Form.Label>
-            <Form.Control type="email" value={username} placeholder="Example: mario.rossi@gmail.com"
+            <Form.Control type="email" value={username} placeholder="Example: u1@p.it"
               onChange={(ev) => setUsername(ev.target.value)} />
           </Form.Group>
           <Form.Group className="mb-3">
