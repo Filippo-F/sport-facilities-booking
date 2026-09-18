@@ -65,9 +65,13 @@ function BookingForm(props) {
 
   // The - and + buttons update the same state used by the input field.
   // The field remains a controlled component; the buttons are just a faster way to change its value.
+  // The most that can be requested is the quantity currently available (the server checks it again).
+  const maxQty = (rule) => props.equipment.find(e => e.id === rule.id)?.available ?? 0;
+
   const step = (rule, delta) => {
     const next = (Number(quantities[rule.id]) || 0) + delta;
-    if (next >= rule.minQty)   // never below the mandatory minimum (0 for optional equipment)
+    // never below the mandatory minimum (0 for optional equipment), never above the availability
+    if (next >= rule.minQty && next <= maxQty(rule))
       handleQuantity(rule.id, next);
   };
 
@@ -94,6 +98,10 @@ function BookingForm(props) {
       }
       if (q < rule.minQty) {
         setErrorMessage(`At least ${rule.minQty} ${rule.name} required`);
+        return;
+      }
+      if (q > maxQty(rule)) {
+        setErrorMessage(`Only ${maxQty(rule)} ${rule.name} available`);
         return;
       }
       if (q > 0)
@@ -189,11 +197,11 @@ function BookingForm(props) {
                       <Button variant="outline-secondary" type="button"
                         disabled={negativeScore || waiting || value <= rule.minQty}
                         onClick={() => step(rule, -1)}>&minus;</Button>
-                      <Form.Control type="number" min={rule.minQty} value={quantities[rule.id] ?? ''}
+                      <Form.Control type="number" min={rule.minQty} max={maxQty(rule)} value={quantities[rule.id] ?? ''}
                         disabled={negativeScore || waiting}
                         onChange={ev => handleQuantity(rule.id, ev.target.value)} />
                       <Button variant="outline-secondary" type="button"
-                        disabled={negativeScore || waiting}
+                        disabled={negativeScore || waiting || value >= maxQty(rule)}
                         onClick={() => step(rule, 1)}>+</Button>
                     </InputGroup>
                   </Form.Group>

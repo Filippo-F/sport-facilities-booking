@@ -131,6 +131,14 @@ function EditReservation(props) {
     setQuantities(old => ({ ...old, [equipmentId]: value }));  // update the quantity for the given equipment ID
   };
 
+  // The most that can be kept is what the reservation already has plus what is still available
+  // (with a negative score nothing can be added). The server checks it again.
+  const maxQty = (rule) => {
+    if (negativeScore)
+      return currentQty(rule.id);
+    return currentQty(rule.id) + (props.equipment.find(e => e.id === rule.id)?.available ?? 0);
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();  // prevent the default form submission behavior (which would reload the page)
     setErrorMessage('');
@@ -148,6 +156,10 @@ function EditReservation(props) {
       }
       if (negativeScore && q > currentQty(rule.id)) {
         setErrorMessage('With a negative score equipment can only be removed, not added');
+        return;
+      }
+      if (q > maxQty(rule)) {
+        setErrorMessage(`At most ${maxQty(rule)} ${rule.name} for this reservation`);
         return;
       }
       if (q > 0)
@@ -189,7 +201,7 @@ function EditReservation(props) {
                   {rule.name} {rule.minQty > 0 ? `(minimum ${rule.minQty})` : '(optional)'} — currently {currentQty(rule.id)}, other {available} available
                 </Form.Label>
                 <Form.Control type="number" min={rule.minQty}
-                  max={negativeScore ? currentQty(rule.id) : undefined}
+                  max={maxQty(rule)}
                   value={quantities[rule.id] ?? ''}
                   disabled={waiting || (negativeScore && currentQty(rule.id) === rule.minQty)}
                   onChange={ev => handleQuantity(rule.id, ev.target.value)} />
