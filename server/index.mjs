@@ -54,8 +54,14 @@ passport.serializeUser(function (user, callback) {
 // carries up-to-date values (in particular the score, which may change during the session).
 passport.deserializeUser(function (user, callback) {
   return userDao.getUserById(user.id)
-    .then(user => callback(null, user)) // if the user is found, return it
-    .catch(err => callback(err, null)); // otherwise return the error (user not found, DB error, etc.)
+    .then(user => {
+      // getUserById resolves { error } when the user no longer exists: "false" tells passport
+      // to drop the login, otherwise that object would become req.user and pass isLoggedIn
+      if (user.error)
+        return callback(null, false);
+      return callback(null, user);
+    })
+    .catch(err => callback(err, null)); // DB error
 });
 
 /** Creating the session */
