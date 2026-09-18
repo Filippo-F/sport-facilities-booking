@@ -31,7 +31,14 @@ app.use(cors(corsOptions));   // enable CORS
 
 /** Authentication strategy: search in the DB a user with matching username (email) and password. **/
 passport.use(new LocalStrategy(async function verify(username, password, callback) {  // function is async. since returns a promise, passport will wait for it to resolve before proceeding
-  const user = await userDao.getUser(username, password);
+  let user;
+  try {
+    user = await userDao.getUser(username, password);
+  } catch (err) {
+    // passport does not handle a rejected promise: without this catch a DB error would
+    // become an unhandled rejection and terminate the whole server process
+    return callback(err);
+  }
   if (!user)
     return callback(null, false, 'Incorrect username or password');  // no user found -> say "incorrect username or password" (generic message, not revealing which one is wrong)
   

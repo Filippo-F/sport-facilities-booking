@@ -38,7 +38,7 @@ const getUser = (email, password) => {
 
         // Hash comparison is done asynchronously since this is CPU-intensive and we want to avoid blocking the server.
         crypto.scrypt(password, row.salt, 32, function (err, hashedPassword) {   // hash the provided password with the stored salt and compare it to the stored hash
-          if (err) reject(err);
+          if (err) return reject(err);  // "return" so that the comparison below never runs on an undefined hash
           if (!crypto.timingSafeEqual(Buffer.from(row.hash, 'hex'), hashedPassword))   // timingSafeEqual is used to prevent timing attacks. 
             resolve(false);
           else
