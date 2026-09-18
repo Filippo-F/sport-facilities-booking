@@ -253,12 +253,15 @@ const deleteReservation = async (user, reservationId) => {
   if (!reservation || reservation.userId !== user.id)
     return { error: 'Reservation not found', code: 404 };
 
-  // the WHERE clause on userId on the line below makes the ownership check race-safe 
-  // since the reservation could have been deleted by another request in the meantime
+  // the equipment rows go first: with foreign keys enforced (see db.mjs) a reservation
+  // cannot be deleted while other rows still point to it.
+  // The WHERE clause on userId in both statements keeps the ownership check inside the query itself,
+  // as a second line of defence after the check above
+  await dbRun(`DELETE FROM reservationEquipment
+    WHERE reservationId IN (SELECT id FROM reservations WHERE id = ? AND userId = ?)`, [reservationId, user.id]);
   const result = await dbRun('DELETE FROM reservations WHERE id = ? AND userId = ?', [reservationId, user.id]);
   if (result.changes === 0)
     return { error: 'Reservation not found', code: 404 };
-  await dbRun('DELETE FROM reservationEquipment WHERE reservationId = ?', [reservationId]);
 
   await dbRun('UPDATE users SET score = score - 1 WHERE id = ?', [user.id]);
   await dbRun('INSERT OR REPLACE INTO releases (userId, facilityTypeId, releasedAt) VALUES (?, ?, ?)',
