@@ -108,3 +108,11 @@ The TOTP secret is the same for all the users: `LXBSMDTMSP2I5XFXIYRGFVWSFI`.
 ## Note
 
 - `server/package.json` includes an `allowScripts` entry for `sqlite3`: npm 12 blocks the install scripts of dependencies by default, and `sqlite3` needs its own to obtain the compiled native binary. Without it `npm ci` succeeds but the server cannot open the database.
+
+## Environment variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `SESSION_SECRET` | in production | Secret used to sign the session cookie. Without it the server uses a development-only fallback; with `NODE_ENV=production` it refuses to start. |
+
+Example: `SESSION_SECRET="$(openssl rand -hex 32)" node index.mjs`

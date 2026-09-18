@@ -54,8 +54,17 @@ passport.deserializeUser(function (user, callback) {
 /** Creating the session */
 import session from 'express-session';
 
+// The secret that signs the session ID cookie comes from the environment, so it never lives in the code.
+// The fallback is only for local development: in production the server refuses to start without a real secret.
+// "||" (not "??") so that an empty variable also counts as missing.
+const sessionSecret = process.env.SESSION_SECRET || (process.env.NODE_ENV === 'production' ? undefined : 'dev-only-secret-change-me');
+if (!sessionSecret) {
+  console.error('SESSION_SECRET must be set when NODE_ENV=production');
+  process.exit(1);
+}
+
 app.use(session({
-  secret: "s3cr3t k3y - sp0rt c3nt3r",  // secret used to sign the session ID cookie
+  secret: sessionSecret,  // secret used to sign the session ID cookie
   resave: false,    // does not force the session to be re-saved on every request IF IT WAS NOT MODIFIED
   saveUninitialized: false,  // does not create empty sessions or never used sessions
 }));
