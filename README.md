@@ -114,6 +114,7 @@ The TOTP secret is the same for all the users: `LXBSMDTMSP2I5XFXIYRGFVWSFI`.
 
 | Variable | Required | Description |
 |---|---|---|
+| `CORS_ORIGIN` | no | The only origin allowed to call the API with credentials. Defaults to `http://localhost:5173`, the Vite dev server. |
 | `SESSION_SECRET` | in production | Secret used to sign the session cookie. Without it the server uses a development-only fallback; with `NODE_ENV=production` it refuses to start. |
 
 Example: `SESSION_SECRET="$(openssl rand -hex 32)" node index.mjs`

@@ -2,7 +2,7 @@
 /*** Importing modules ***/
 import express from 'express'; // express web framework
 import morgan from 'morgan';  // logging middleware
-import { check, validationResult } from 'express-validator'; // validation middleware
+import { check, param, validationResult } from 'express-validator'; // validation middleware
 import cors from 'cors';  // CORS middleware
 
 /** Authentication-related imports **/
@@ -22,7 +22,7 @@ app.use(express.json());
 
 /** Set up and enable Cross-Origin Resource Sharing (CORS) **/
 const corsOptions = {
-  origin: 'http://localhost:5173',  // the only origin we allow to access the server
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',  // the only origin we allow to access the server (the React client)
   credentials: true,
 };
 app.use(cors(corsOptions));   // enable CORS
@@ -90,15 +90,15 @@ app.use(session({
 }));
 app.use(passport.authenticate('session'));
 
-/** TOTP verification with replay protection.
- * A code is accepted only if it is valid within the allowed window and its
- * time step is more recent than the last accepted one for this user.
- */
 // Brute-force limit on the TOTP step: at most 5 attempts every 5 minutes per user.
 // With 3 valid codes out of 10^6 at any time, guessing one would take on average ~230 days.
 const TOTP_MAX_ATTEMPTS = 5;
 const TOTP_LOCK_MS = 5 * 60 * 1000;
 
+/** TOTP verification with replay protection.
+ * A code is accepted only if it is valid within the allowed window and its
+ * time step is more recent than the last accepted one for this user.
+ */
 function verifyTotpToken(user, token) {
   const totp = new TOTP({
     algorithm: 'SHA1',
@@ -225,7 +225,7 @@ app.post('/api/reservations', isLoggedIn,
 // Replaces the equipment of one of the current user's reservations.
 app.put('/api/reservations/:id', isLoggedIn,
   [
-    check('id').isInt({ min: 1 }),
+    param('id').isInt({ min: 1 }),   // "param" reads the id only from the URL, not from the body or the query string
     ...equipmentChecks,  
   ],
   async (req, res) => {
@@ -252,7 +252,7 @@ app.put('/api/reservations/:id', isLoggedIn,
 // Deletes one of the current user's reservations. The score is decreased (by 1) and
 // the deletion time is recorded to enforce the 30-second rule.
 app.delete('/api/reservations/:id', isLoggedIn,
-  [check('id').isInt({ min: 1 })],
+  [param('id').isInt({ min: 1 })],
   async (req, res) => {
     const errors = validationResult(req).formatWith(errorFormatter);
     if (!errors.isEmpty()) {
@@ -302,7 +302,7 @@ app.post('/api/sessions', function (req, res, next) {
 // Second authentication step: verifies the TOTP code. On success the session
 // is marked as fully 2FA-authenticated and a negative score goes back to zero.
 app.post('/api/login-totp', isLoggedIn,
-  [check('code').isString().isLength({ min: 6, max: 6 })],  // validate that the code is a string of 6 characters
+  [check('code').isString().matches(/^[0-9]{6}$/)],  // validate that the code is made of exactly 6 digits
   async (req, res) => {
     const errors = validationResult(req).formatWith(errorFormatter);   // format the errors as strings
     if (!errors.isEmpty()) {

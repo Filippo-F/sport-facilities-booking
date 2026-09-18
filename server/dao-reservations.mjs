@@ -189,7 +189,9 @@ const createReservation = async (user, facilityCode, typeId, equipment) => {
     const result = await dbRun('INSERT INTO reservations (userId, facilityCode) VALUES (?, ?)', [user.id, facilityCode]);
     reservationId = result.lastID;
   } catch (err) {
-    if (err.code === 'SQLITE_CONSTRAINT')   // failure due to UNIQUE constraint violation on facilityCode
+    // only the UNIQUE constraint on facilityCode means "already booked": any other constraint
+    // failure is unexpected and must reach the error handler instead of producing a wrong message
+    if (err.code === 'SQLITE_CONSTRAINT' && err.message.includes('UNIQUE'))
       return { error: 'Facility already booked', code: 409 };
     throw err;
   }
