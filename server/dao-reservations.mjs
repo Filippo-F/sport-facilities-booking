@@ -11,6 +11,19 @@ const dbAll = (sql, params = []) => new Promise((resolve, reject) =>
 const dbRun = (sql, params = []) => new Promise((resolve, reject) =>
   db.run(sql, params, function (err) { err ? reject(err) : resolve(this); }));
 
+/* The operations that modify reservations first check the availability and then write, with
+   several awaits in between: two parallel requests could both read the same availability and
+   together rent more equipment than exists (facilities are already protected by the UNIQUE
+   constraint, equipment is not). "exclusive" runs these operations one at a time, in arrival order,
+   by chaining each one after the previous. This is enough because the server is a single Node process;
+   with several processes the checks would have to move into DB transactions. */
+let lastOperation = Promise.resolve();
+const exclusive = (operation) => {
+  const result = lastOperation.then(operation);
+  lastOperation = result.catch(() => {});  // a failed operation must not block the following ones
+  return result;
+};
+
 /* Current availability of every equipment type, as a map id -> quantity.
    Only equipment belonging to an existing reservation counts as rented. */
 const equipmentAvailability = async () => {
@@ -255,7 +268,8 @@ const deleteReservation = async (user, reservationId) => {
 export default {
   listFacilities,
   listReservationsByUser,
-  createReservation,
-  updateReservationEquipment,
-  deleteReservation
+  // the operations that change availability are exported wrapped in "exclusive" (see the top of the file)
+  createReservation: (...args) => exclusive(() => createReservation(...args)),
+  updateReservationEquipment: (...args) => exclusive(() => updateReservationEquipment(...args)),
+  deleteReservation: (...args) => exclusive(() => deleteReservation(...args)),
 };
