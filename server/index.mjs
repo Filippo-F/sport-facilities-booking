@@ -297,19 +297,24 @@ app.post('/api/login-totp', isLoggedIn,
       return res.status(422).json({ error: errors.array().join(', ') });  // if there are validation errors, return them as a 422 Unprocessable Entity response
     }
     if (!req.user.secret) {
-      return res.status(400).json({ error: 'Cannot authenticate with TOTP' });  // if the user does not have a TOTP secret, return a 400 Bad Request response
+      // same status and message as a wrong code, so the answer does not reveal whether TOTP is enabled
+      return res.status(401).json({ error: 'Cannot authenticate with TOTP' });
     }
     const success = verifyTotpToken(req.user, req.body.code);
     if (success) {
-      req.session.method = 'totp';
       try {
-        // store the last accepted step for replay protection
-        await userDao.updateLastTotpStep(req.user.id, req.user.lastTotpStep);
+        // store the last accepted step for replay protection; false means that a concurrent
+        // request has just used the same code, so this one is a replay
+        const stored = await userDao.updateLastTotpStep(req.user.id, req.user.lastTotpStep);
+        if (!stored)
+          return res.status(401).json({ error: 'Cannot authenticate with TOTP' });
         // a negative score is restored to zero by a 2FA login
         await userDao.resetScore(req.user.id);
-      } catch (err) {
-        return res.status(503).json({ error: 'Database error' });
+      } catch {
+        return res.status(500).json({ error: 'Database error' });
       }
+      // the session is marked as 2FA only after the DB writes succeeded
+      req.session.method = 'totp';
       return res.json({ otp: 'authorized', score: 0 });  // return the new score to the client (now 0 after a successful 2FA login)
     } else {
       return res.status(401).json({ error: 'Cannot authenticate with TOTP' });

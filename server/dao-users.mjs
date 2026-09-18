@@ -50,18 +50,16 @@ const getUser = (email, password) => {
 };
 
 // Stores the last accepted TOTP step, to reject reused or older codes.
+// The condition "lastTotpStep < ?" makes check and update a single atomic operation:
+// if two requests carry the same code at the same time, only the first one changes the row.
+// Resolves true if the step was stored, false if it had already been used.
 const updateLastTotpStep = (userId, lastTotpStep) => {
   return new Promise((resolve, reject) => {
-    const sql = 'UPDATE users SET lastTotpStep = ? WHERE id = ?';
-    db.run(sql, [lastTotpStep, userId], function (err) {
-      if (err) {
-        reject(err);
-      }
-      if (this.changes !== 1) {   // if no rows were updated, it means the user was not found
-        resolve({ error: 'User not found.' });
-      } else {
-        resolve(this.changes);
-      }
+    const sql = 'UPDATE users SET lastTotpStep = ? WHERE id = ? AND lastTotpStep < ?';
+    db.run(sql, [lastTotpStep, userId, lastTotpStep], function (err) {
+      if (err)
+        return reject(err);
+      resolve(this.changes === 1);
     });
   });
 };
