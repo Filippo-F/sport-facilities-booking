@@ -1,5 +1,7 @@
 # Sport Facilities Booking
 
+![npm-audit](https://github.com/Filippo-F/sport-facilities-booking/actions/workflows/npm-audit.yml/badge.svg)
+
 A full-stack web application for booking the facilities of a sport center (tennis courts, basketball
 courts, cycling tracks, ...) together with the equipment to rent. Users log in with username and
 password plus an optional TOTP second factor, book a facility directly or let the system assign a free
@@ -7,6 +9,9 @@ one, and add, change or remove equipment within the center's stock.
 
 It was built as the individual project for the *Web Applications* course at Politecnico di Torino
 (2026) and then reviewed and hardened for publication: see [Security notes](#security-notes).
+The code submitted for the exam is tagged [`v1.0-exam`](https://github.com/Filippo-F/sport-facilities-booking/tree/v1.0-exam),
+and every change made afterwards is a separate commit
+([see all changes](https://github.com/Filippo-F/sport-facilities-booking/compare/v1.0-exam...main)).
 
 <table>
   <tr>
