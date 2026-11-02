@@ -20,5 +20,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-      - run: npm audit --audit-level=moderate
+      - name: Runtime dependencies (any severity)
+        run: npm audit --omit=dev --audit-level=low
+        working-directory: ${{ matrix.package }}
+      - name: All dependencies (high and critical)
+        run: npm audit --audit-level=high
         working-directory: ${{ matrix.package }}
